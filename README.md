@@ -22,7 +22,6 @@ project/
 └── main.py
 ```
 # Placeholder MAS Functions and Dependencies
-
 # agents/prediction_agent.py
 ```
 import pickle
@@ -45,6 +44,7 @@ class DemandResponseAgent:
         # Placeholder for demand optimization logic
         return adjusted_demand
 ```
+
 # agents/behavioral_segmentation_agent.py
 ```
 class BehavioralSegmentationAgent:
