@@ -17,6 +17,7 @@ project/
 │   └── trading_platform.py
 ├── simulation/
 │   └── simulator.py
+│   └── test.py
 ├── utils/
 │   └── data_preprocessing.py
 └── main.py
