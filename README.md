@@ -1,153 +1,54 @@
-# 5014-Project
-Project for ESOF 5014
-# Project Structure
-```
-project/
-├── agents/
-│   ├── prediction_agent.py
-│   ├── demand_response_agent.py
-│   ├── behavioral_segmentation_agent.py
-│   ├── negotiation_agent.py
-│   └── facilitating_agent.py
-├── communication/
-│   └── message_handler.py
-├── models/
-│   └── lstm_model.py
-├── platform/
-│   └── trading_platform.py
-├── simulation/
-│   └── simulator.py
-│   └── test.py
-├── utils/
-│   └── data_preprocessing.py
-└── main.py
-```
-# Placeholder MAS Functions and Dependencies
+# ESOF 5014: Agile Software Development  
+## Project Proposal: Smart Home Energy Management and Trading System  
 
-# agents/prediction_agent.py
-```
-import pickle
+### 1. Project Title  
+**Smart Home Energy Management System with Multi-Agent Collaboration for Renewable Energy Production, Consumption Prediction, and Peer-to-Peer Energy Trading**
 
-class PredictionAgent:
-    def __init__(self, model_path):
-        with open(model_path, 'rb') as file:
-            self.model = pickle.load(file)
+### 2. Background and Motivation  
+The global energy landscape is rapidly transitioning towards renewable energy sources to combat climate change and reduce carbon footprints. In this context, smart homes equipped with renewable energy systems such as solar panels and wind turbines are gaining prominence. However, challenges remain in optimizing energy production, managing consumption, and facilitating efficient peer-to-peer (P2P) energy trading among neighbors.  
 
-    def predict(self, input_data):
-        return self.model.predict(input_data)
-```
-# agents/demand_response_agent.py
-testing comments on editing code
+Multi-agent systems (MAS) offer a promising framework to address these challenges. By deploying autonomous agents with specific roles, the system can dynamically adapt to varying energy demands, optimize resource usage, and enable seamless energy trading. This project aims to design and implement a MAS for smart homes to enhance energy efficiency and foster a collaborative energy ecosystem.  
 
-```
-class DemandResponseAgent:
-    def __init__(self):
-        pass
+### 3. Objectives  
+- **(30% Mark)** Develop the mathematical model for each agent. The project will include at least five agents:  
+  - **Prediction Agent**: Predicts energy production and consumption for a house, determining demand or surplus on an hourly basis.  
+  - **Demand Response Agent**: Interacts with the energy grid agent to engage in demand response and curtailment requests to balance energy supply and demand.  
+  - **Behavioral and Segmentation Agent**: Handles appliance-level prediction and classification to prioritize smart home appliance usage based on user behavior.  
+  - **Negotiation Agent**: Facilitates energy trading among neighbors and the power grid using state-of-the-art auction theory. The design must prove all properties of auction theory for algorithmic game theory.  
+  - **Facilitating Agent**: Serves as the interface and coordination hub for agents in the system, ensuring seamless interactions.  
 
-    def optimize_demand(self, current_demand, predicted_supply):
-        # Placeholder for demand optimization logic
-        return adjusted_demand
-```
-# agents/behavioral_segmentation_agent.py
-```
-class BehavioralSegmentationAgent:
-    def __init__(self):
-        pass
+- **(15% Mark)** Create a peer-to-peer energy trading platform to facilitate secure and efficient energy transactions among neighboring homes.  
+- **(15% Mark)** Evaluate the system’s performance in terms of energy efficiency, prediction accuracy, and trading efficacy.  
+- **(30% Mark)** Use a Software Agent Development Environment (e.g., JADE) to develop the system. The methodology of the project should follow Agile principles.  
+- **(10% Mark)** Collect datasets for the project:  
+  - **Smart home datasets**: Appliance-level energy consumption.  
+  - **Solar/Wind datasets**: Hourly energy production.  
+  - **Power grid datasets**: Energy consumption at the lowest granular level.  
 
-    def segment_users(self, user_data):
-        # Placeholder for user segmentation logic
-        return user_segments
-```
-# agents/negotiation_agent.py
-```
-class NegotiationAgent:
-    def __init__(self):
-        pass
+### 4. Deliverables  
+#### 4.1 System Architecture  
+The proposed system comprises the following components:  
+- **Renewable Energy Sources**: Solar panels and/or wind turbines.  
+- **Energy Storage**: Batteries for storing surplus energy.  
+- **Multi-Agent System (MAS)**: Interaction model and protocol.  
+- **User Interface**: Provides real-time insights and control options for homeowners.  
 
-    def negotiate(self, buyer, seller, energy_amount):
-        # Placeholder for negotiation logic
-        return trade_agreement
-```
-# agents/facilitating_agent.py
-```
-class FacilitatingAgent:
-    def __init__(self):
-        pass
+#### 4.2 Mathematical Model  
+- Develop mathematical models for each agent and provide proofs of auction theories.  
 
-    def coordinate_agents(self, agent_tasks):
-        # Placeholder for coordination logic
-        return coordination_results
-```
-# communication/message_handler.py
-```
-from pubsub import pub
+#### 4.3 Predictive Modeling  
+- Develop machine learning models (e.g., LSTM networks or hybrid approaches) to forecast short-term and long-term energy production and consumption based on historical data, weather conditions, and user behavior patterns.  
 
-def send_message(topic, message):
-    pub.sendMessage(topic, message=message)
+#### 4.4 Peer-to-Peer Trading Platform  
+- Design a secure platform (e.g., blockchain-based) for transparent energy transactions.  
+- Use smart contracts to automate trading processes based on predefined rules, ensuring fairness and efficiency.  
 
-def receive_message(topic, listener):
-    pub.subscribe(listener, topic)
-```
-# models/lstm_model.py
-```
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+#### 4.5 Simulation and Testing  
+- Simulate the system in a controlled environment using synthetic and real-world datasets.  
+- Evaluate the MAS's performance under various scenarios, including peak demand, renewable energy surplus, and dynamic market conditions.  
 
-def build_lstm_model(input_shape):
-    model = Sequential([
-        LSTM(50, return_sequences=True, input_shape=input_shape),
-        LSTM(50),
-        Dense(1)
-    ])
-    model.compile(optimizer='adam', loss='mse')
-    return model
-```
-# platform/trading_platform.py
-```
-class TradingPlatform:
-    def __init__(self):
-        pass
-
-    def execute_trade(self, trade_details):
-        # Placeholder for trading logic
-        return trade_execution_result
-```
-# simulation/simulator.py
-
-```
-class Simulator:
-    def __init__(self):
-        pass
-
-    def run_simulation(self, scenarios):
-        # Placeholder for simulation logic
-        return simulation_results
-```
-# utils/data_preprocessing.py
-
-```
-def preprocess_data(raw_data):
-    # Placeholder for data preprocessing logic
-    return processed_data
-```
-# main.py
-```
-from agents.prediction_agent import PredictionAgent
-from agents.demand_response_agent import DemandResponseAgent
-from agents.behavioral_segmentation_agent import BehavioralSegmentationAgent
-from agents.negotiation_agent import NegotiationAgent
-from agents.facilitating_agent import FacilitatingAgent
-
-if __name__ == '__main__':
-    prediction_agent = PredictionAgent('models/prediction_model.pkl')
-    demand_response_agent = DemandResponseAgent()
-    behavioral_agent = BehavioralSegmentationAgent()
-    negotiation_agent = NegotiationAgent()
-    facilitating_agent = FacilitatingAgent()
-
-    # Example usage:
-    input_data = [1, 2, 3]  # Replace with actual input data
-    prediction = prediction_agent.predict(input_data)
-    print(f'Prediction: {prediction}')
-```
+### 5. Expected Outcomes  
+- A functional prototype of a smart home energy management system powered by a multi-agent framework.  
+- Accurate predictive models for energy production and consumption.  
+- A secure and efficient P2P energy trading platform.  
+- Quantitative analysis of the system's benefits, including cost savings, energy efficiency, and reduced reliance on the main grid.  
