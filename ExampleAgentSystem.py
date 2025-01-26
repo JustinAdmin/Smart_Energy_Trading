@@ -1,7 +1,7 @@
 # Before you run this program ensure that you have SPADE installed with "pip install spade".
 # In a separate terminal run the command "spade run" in the project folder to start the SPADE server.
 
-import random
+import time
 import asyncio
 
 # These are the libraries that you will generally need to import for your agent
@@ -12,7 +12,6 @@ from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 
 # Here is an example agent, it extends the "Agent" class we imported from SPADE.
-# **Note: This agent is NOT run when you run the example script.
 class ExampleAgent(Agent):
     # Most agents will need to await signals from other agents, for this we will use
     # the CyclicBehaviour because it will handle loop behaviour and asynchronous messages.
@@ -28,7 +27,7 @@ class ExampleAgent(Agent):
                     # Unpack the information in the message (stored in JSON format)
                     data = json.loads(msg.body)
                     # Data is now a dictionary with your desired variable names as keys with their corresponding values
-                    example_value = data["example_value"]
+                    example_value = data["example_data"]
                     # Now you can do logic (i.e. run your model) on the inputs
                     model_result = example_value/2
                     # Create a Message object to store your response
@@ -39,70 +38,50 @@ class ExampleAgent(Agent):
                         "key2":"value",
                         "model_result":model_result
                     })
-
+                    # Set the sender to your agents ID
                     # Send the message
                     await self.send(response)
+                    print(f"[ExampleAgent] Message {model_result} sent!")
                 # If we encounter an error we can specify which agent caught the error, and the message in question
                 except json.JSONDecodeError:
-                    print("[ExampleAgent] Invalid message format: {msg.body}")
+                    print(f"[ExampleAgent] Invalid message format: {msg.body}")
+
+    async def setup(self):
+        e = self.AwaitingBehaviour()
+        self.add_behaviour(e)
 
 
 
 
-class InformationGatheringAgent(Agent):
-    class GatherInformationBehaviour(CyclicBehaviour):
+# This is a demo agent that simulates a facilitating agent
+class Facilitating(Agent):
+    class FacilitatingBehaviour(CyclicBehaviour):
         async def run(self):
-            # Simulated API call (dummy implementation)
-            information = self.simulate_api_search()
-            
-            # Send information to mediator
-            msg = Message(to="mediator@localhost")
-            msg.set_metadata("performative", "inform")
-            msg.body = information
+            msg = Message(to="example@localhost")
+            data = {
+                "example_data":100
+            }
+            msg.body = json.dumps(data)
             await self.send(msg)
-            
-            # Wait before next search
-            await asyncio.sleep(10)
-        
-        def simulate_api_search(self):
-            # Simulate fetching information from a dummy API
-            topics = ['technology', 'science', 'politics', 'sports']
-            return f"Latest news in {random.choice(topics)}: {random.randint(1000, 9999)}"
+            time.sleep(5)
 
-class MediatorAgent(Agent):
-    class MediationBehaviour(CyclicBehaviour):
-        async def run(self):
-            msg = await self.receive(timeout=10)
-            if msg:
-                # Forward received information to action agent
-                forward_msg = Message(to="action@localhost")
-                forward_msg.set_metadata("performative", "inform")
-                forward_msg.body = msg.body
-                await self.send(forward_msg)
+    async def setup(self):
+        f = self.FacilitatingBehaviour()
+        self.add_behaviour(f)
 
-class ActionAgent(Agent):
-    class ActionBehaviour(CyclicBehaviour):
-        async def run(self):
-            msg = await self.receive(timeout=10)
-            if msg:
-                # Perform action based on received information
-                print(f"Action triggered: {msg.body}")
 
+
+
+# This is what our main file will look like (except with all our agents)
 async def main():
     # Create agents
-    information_agent = InformationGatheringAgent("information@localhost", "password")
-    mediator_agent = MediatorAgent("mediator@localhost", "password")
-    action_agent = ActionAgent("action@localhost", "password")
+    example_agent = ExampleAgent("example@localhost", "password")
+    facilitating_agent = Facilitating("facilitating@localhost", "password")
 
     # Start agents
-    await information_agent.start()
-    await mediator_agent.start()
-    await action_agent.start()
+    await example_agent.start()
+    await facilitating_agent.start()
 
-    # Add behaviours
-    information_agent.add_behaviour(information_agent.GatherInformationBehaviour())
-    mediator_agent.add_behaviour(mediator_agent.MediationBehaviour())
-    action_agent.add_behaviour(action_agent.ActionBehaviour())
 
 # Run the multi-agent system
 if __name__ == "__main__":
