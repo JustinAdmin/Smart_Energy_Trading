@@ -6,10 +6,10 @@ class FacilitatingAgent(Agent):
     def __init__(self, jid, password):
         super().__init__(jid, password)
         self.dependencies = {
-            "AgentA": ["AgentB", "AgentC"],
-            "AgentB": ["AgentC"],
-            "AgentC": ["AgentD"],
-            "AgentD": []  # No dependencies
+            "prediction": ["AgentB", "AgentC"],
+            "demandResponse": ["AgentC"],
+            "negotiation": ["AgentD"],
+            "behavioralSegmentation": []  # No dependencies
         }
         self.resolved = {agent: False for agent in self.dependencies}
 
@@ -46,6 +46,6 @@ class FacilitatingAgent(Agent):
                 print("No messages received. Waiting...")
 
     async def setup(self):
-        print("Facilitating Agent starting...")
+        print("[FacilitatingAgent] Started")
         handler = self.MultiAgentHandler()
         self.add_behaviour(handler)

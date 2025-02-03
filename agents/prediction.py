@@ -1,41 +1,31 @@
-import spade
-import tensorflow as tf
-import torch
-import numpy as np
+from spade.agent import Agent
+from spade.behaviour import CyclicBehaviour
+from spade.message import Message
+import json
 
-class PredictionAgent(spade.agent.Agent):
-    def __init__(self, jid, password, model_path):
-        super().__init__(jid, password)
-        self.model = self.load_prediction_model(model_path)
-    
-    def load_prediction_model(self, model_path):
-        # Load TensorFlow or PyTorch model
-        try:
-            model = tf.keras.models.load_model(model_path)
-        except:
-            model = torch.load(model_path)
-        return model
+# Prediction Agent: Forecasts energy demand and production
+class PredictionAgent(Agent):
+    class PredictBehaviour(CyclicBehaviour):
+        async def run(self):
+            print("[PredictionAgent] Waiting for input data...")
+            msg = await self.receive(timeout=5)
+            if msg:
+                try:
+                    data = json.loads(msg.body)
+                    print(f"[PredictionAgent] Received data: {data}")
+                    predicted_demand = data['current_demand'] * 1.05  # Simple prediction logic
+                    predicted_production = data['current_production'] * 0.95
+                    response = Message(to="facilitating@localhost")
+                    response.body = json.dumps({
+                        "predicted_demand": predicted_demand,
+                        "predicted_production": predicted_production
+                    })
+                    await self.send(response)
+                    print(f"[PredictionAgent] Sent prediction data to FacilitatingAgent: {response.body}")
+                except json.JSONDecodeError:
+                    print(f"[PredictionAgent] Invalid message format: {msg.body}")
     
     async def setup(self):
-        # SPADE behavior for prediction agent
-        prediction_template = spade.template.Template()
-        prediction_template.set_metadata("performative", "predict")
-        
-        self.add_behaviour(self.PredictionBehaviour(), prediction_template)
-    
-    class PredictionBehaviour(spade.behaviour.CyclicBehaviour):
-        async def run(self):
-            # Receive energy history
-            msg = await self.receive(timeout=10)
-            if msg:
-                energy_history = np.array(msg.body)
-                
-                # Predict energy use, generation, and status
-                prediction = self.agent.model.predict(energy_history)
-                
-                # Prepare response message
-                response = spade.message.Message(
-                    to=msg.sender,
-                    body=str(prediction)
-                )
-                await self.send(response)
+        print("[PredictionAgent] Started")
+        self.add_behaviour(self.PredictBehaviour())
+        self.web.start(hostname="127.0.0.1", port="10001")
