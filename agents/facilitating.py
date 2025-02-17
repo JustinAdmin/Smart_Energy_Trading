@@ -6,8 +6,7 @@ import time
 
 class FacilitatingAgent(Agent):
     class MultiAgentHandler(CyclicBehaviour):
-        def __init__(self):
-            super().__init__()
+        async def on_start(self):
             self.dependencies = {
                 "prediction": ["house"],
                 "demandResponse": ["behavioralSegmentation", "prediction"],
@@ -17,7 +16,7 @@ class FacilitatingAgent(Agent):
                 "house" : []
             }
             self.resolved = {agent: {"Status":False, "Msg":None} for agent in self.dependencies}
-            self.startup = True
+            self.startup = True    
 
         async def run(self):
             # Wait for messages from any agent
