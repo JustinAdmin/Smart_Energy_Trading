@@ -27,4 +27,4 @@ class DemandResponseAgent(Agent):
     async def setup(self):
         print("[DemandResponseAgent] Started")
         self.add_behaviour(self.DRBehaviour())
-        self.web.start(hostname="127.0.0.1", port="10002")
+        self.web.start(hostname="localhost", port="9094")

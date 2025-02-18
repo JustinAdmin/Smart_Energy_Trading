@@ -25,4 +25,4 @@ class NegotiationAgent(Agent):
     async def setup(self):
         print("[NegotiationAgent] Started")
         self.add_behaviour(self.TradingBehaviour())
-        self.web.start(hostname="127.0.0.1", port="10004")
+        self.web.start(hostname="localhost", port="9095")

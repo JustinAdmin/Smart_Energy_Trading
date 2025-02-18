@@ -9,14 +9,14 @@ class FacilitatingAgent(Agent):
         async def on_start(self):
             self.dependencies = {
                 "prediction": ["house"],
-                "demandResponse": ["behavioralSegmentation", "prediction"],
+                "demandResponse": ["grid"],
                 "negotiation": ["prediction"],
                 "behavioralSegmentation": ["demandResponse", "prediction"],
                 "grid" : ["negotiation"],
                 "house" : []
             }
             self.resolved = {agent: {"Status":False, "Msg":None} for agent in self.dependencies}
-            self.startup = True    
+            self.startup = True
 
         async def run(self):
             # Wait for messages from any agent
@@ -61,18 +61,18 @@ class FacilitatingAgent(Agent):
             else:
                 print("[FacilitatingAgent] No message received.")
 
-            time.sleep(1)
             print("[FacilitatingAgent] Handling received messages...")
             for agent in self.dependencies:
-                time.sleep(1)
-                if agent!= "house":
-                    print(f"[FacilitatingAgent] Checking {agent} dependencies...")
 
-                    # Check for unresolved dependencies
-                    unresolved_dependencies = []
-                    for dependency in self.dependencies[agent]:
-                        if self.resolved[dependency]['Status'] == False:
-                            unresolved_dependencies.append(dependency)
+                # Check for unresolved dependencies
+                print(f"[FacilitatingAgent] Checking {agent} dependencies...")
+                unresolved_dependencies = []
+                for dependency in self.dependencies[agent]:
+                    if self.resolved[dependency]['Status'] == False:
+                        unresolved_dependencies.append(dependency)
+
+                # If the agent has dependencies
+                if len(self.dependencies[agent]) != 0:
 
                     #  If no dependencies are unresolved
                     if len(unresolved_dependencies) == 0:
@@ -95,8 +95,14 @@ class FacilitatingAgent(Agent):
 
                             # Set status back to false since agent is thinking of a new answer
                             self.resolved[agent]["Status"] = False
+
+                        # If there is an error
                         except json.JSONDecodeError:
                             print(f"[PredictionAgent] Invalid message format: {msg.body}")
+                            # Set resolved status of dependencies to false as 
+                            # message was corrupted and a new one is needed
+                            for dependency in self.dependencies[agent]:
+                                self.resolved[dependency]["Status"] = False
 
                     # Print dependencies that have not yet been fulfilled (this way we know if a specific agent is blocking the system)
                     else:
@@ -104,9 +110,13 @@ class FacilitatingAgent(Agent):
                         for dependency in unresolved_dependencies:
                             print(dependency)
 
+                # Otherwise the agent has no dependencies.
+                else:
+                    print(f"[FacilitatingAgent] {agent} has no dependencies.")
+
 
     async def setup(self):
         print("[FacilitatingAgent] Started")
         handler = self.MultiAgentHandler()
         self.add_behaviour(handler)
-        self.web.start(hostname="127.0.0.1", port="10000")
+        self.web.start(hostname="localhost", port="9097")

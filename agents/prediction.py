@@ -31,4 +31,4 @@ class PredictionAgent(Agent):
     async def setup(self):
         print("[PredictionAgent] Started")
         self.add_behaviour(self.PredictBehaviour())
-        self.web.start(hostname="127.0.0.1", port="10001")
+        self.web.start(hostname="localhost", port="9096")

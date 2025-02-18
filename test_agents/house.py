@@ -9,6 +9,7 @@ class House(Agent):
     class HouseStatus(CyclicBehaviour):
         async def run(self):
             print("[House] Sending current consumption and production data...")
+            msg = await self.receive(timeout=5)
             response = Message(to="facilitating@localhost")
             response.body = json.dumps({
                 "current_demand": 100,
@@ -21,4 +22,4 @@ class House(Agent):
     async def setup(self):
         print("[House] Started")
         self.add_behaviour(self.HouseStatus())
-        self.web.start(hostname="127.0.0.1", port="10009")
+        self.web.start(hostname="localhost", port="9091")
