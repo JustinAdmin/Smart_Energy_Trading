@@ -5,6 +5,9 @@ from agents.demandResponse import DemandResponseAgent
 from agents.facilitating import FacilitatingAgent
 from agents.negotiation import NegotiationAgent
 from agents.prediction import PredictionAgent
+
+from agents.gui import GUIAgent
+
 from test_agents.grid import Grid
 from test_agents.house import House
 import asyncio
@@ -19,8 +22,10 @@ async def main():
     negotiation_agent = NegotiationAgent("negotiation@localhost", "password")
     prediction_agent = PredictionAgent("prediction@localhost", "password")
     facilitating_agent = FacilitatingAgent("facilitating@localhost", "password")
+    gui_agent = GUIAgent("gui@localhost", "password")
 
     # Start agents
+    await gui_agent.start()
     await house.start()
     await grid.start()
     await behavioral_segmentation_agent.start()
