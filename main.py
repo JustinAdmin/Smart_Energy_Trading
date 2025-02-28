@@ -17,7 +17,7 @@ async def main():
     # Create agents
     house = House("house@localhost", "password")
     grid = Grid("grid@localhost", "password")
-    behavioral_segmentation_agent = BehavioralSegmentationAgent("behavioralSegmentation@localhost", "password")
+    behavioral_segmentation_agent = BehavioralSegmentationAgent("behavioralsegmentation@localhost", "password")
     demand_response_agent = DemandResponseAgent("demandResponse@localhost", "password")
     negotiation_agent = NegotiationAgent("negotiation@localhost", "password")
     prediction_agent = PredictionAgent("prediction@localhost", "password")

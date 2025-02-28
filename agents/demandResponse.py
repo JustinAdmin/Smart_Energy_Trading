@@ -18,7 +18,10 @@ class DemandResponseAgent(Agent):
                     else:
                         curtailment = 0
                     response = Message(to="facilitating@localhost")
-                    response.body = json.dumps({"curtailment": curtailment})
+                    response.body = json.dumps({
+                        "curtailment": curtailment,
+                        "recommended_appliance_behaviour": ["Shut Off Blender", "Don't use Washing Machine", "Keep heater off between 4:00pm and 8:00pm"]
+                        })
                     await self.send(response)
                     print(f"[DemandResponseAgent] Sent curtailment action to FacilitatingAgent: {response.body}")
                 except json.JSONDecodeError:
