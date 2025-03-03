@@ -1,14 +1,17 @@
+import streamlit as st
+import json
+from datetime import datetime
+import asyncio
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message
-import json
-from datetime import datetime
 
+# Define the FacilitatingAgent class as before
 class FacilitatingAgent(Agent):
     class MultiAgentHandler(CyclicBehaviour):
         async def on_start(self):
             self.dependencies = {
-                "gui": ["prediction", "house", "negotiation", "demandResponse", "grid"],
+                "gui": ["house", "negotiation", "demandResponse"],
                 "prediction": ["house"],
                 "demandResponse": ["grid", "behavioralsegmentation"],
                 "negotiation": ["house", "prediction"],
@@ -16,7 +19,7 @@ class FacilitatingAgent(Agent):
                 "grid" : ["negotiation"],
                 "house" : []
             }
-            self.last_message = {agent: {"time":datetime.now(), "msg":None} for agent in self.dependencies}
+            self.last_message = {agent: {"time": datetime.now(), "msg": None} for agent in self.dependencies}
             self.startup = True
 
         async def run(self):
@@ -30,95 +33,81 @@ class FacilitatingAgent(Agent):
                 print(f"[FacilitatingAgent] Received message from {sender}: {msg.body}")
 
                 # Example: Handle based on sender
-                if sender == "prediction@localhost" and time_from_now(self.last_message["prediction"]) > 10:
+                if sender == "prediction@localhost" and time_from_now(self.last_message["prediction"]) > 3:
                     print("[FacilitatingAgent] Prediction received.")
                     self.last_message["prediction"]["time"] = datetime.now()
                     self.last_message["prediction"]["msg"] = json.loads(msg.body)
+                    st.session_state["Prediction"] = (f"Prediction received: {msg.body}")
+                    st.write(st.session_state["Prediction"])
 
-                elif sender == "demandResponse@localhost" and time_from_now(self.last_message["demandResponse"]) > 10:
+                elif sender == "demandResponse@localhost" and time_from_now(self.last_message["demandResponse"]) > 3:
                     print("[FacilitatingAgent] Demand response received.")
                     self.last_message["demandResponse"]["time"] = datetime.now()
                     self.last_message["demandResponse"]["msg"] = json.loads(msg.body)
+                    st.session_state["demandResponse"] = (f"Demand response received: {msg.body}")
 
-                elif sender == "negotiation@localhost" and time_from_now(self.last_message["negotiation"]) > 10:
+                elif sender == "negotiation@localhost" and time_from_now(self.last_message["negotiation"]) > 3:
                     print("[FacilitatingAgent] Negotiation message received.")
                     self.last_message["negotiation"]["time"] = datetime.now()
                     self.last_message["negotiation"]["msg"] = json.loads(msg.body)
+                    st.session_state["negotiation"] = (f"Negotiation message received: {msg.body}")
 
-                elif sender == "behavioralsegmentation@localhost" and time_from_now(self.last_message["behavioralSegmentation"]) > 10:
+                elif sender == "behavioralsegmentation@localhost" and time_from_now(self.last_message["behavioralsegmentation"]) > 3:
                     print("[FacilitatingAgent] Behavioral segmentation message received.")
-                    self.last_message["behavioralSegmentation"]["time"] = datetime.now()
-                    self.last_message["behavioralSegmentation"]["msg"] = json.loads(msg.body)
+                    self.last_message["behavioralsegmentation"]["time"] = datetime.now()
+                    self.last_message["behavioralsegmentation"]["msg"] = json.loads(msg.body)
+                    st.session_state["behavioralsegmentation"] = (f"Behavioral segmentation message received: {msg.body}")
 
-                elif sender == "house@localhost" and time_from_now(self.last_message["house"]) > 10:
+                elif sender == "house@localhost" and time_from_now(self.last_message["house"]) > 3:
                     print("[FacilitatingAgent] House status received.")
                     self.last_message["house"]["time"] = datetime.now()
                     self.last_message["house"]["msg"] = json.loads(msg.body)
+                    st.session_state["house"] = (f"House status received: {msg.body}")
 
-                elif sender == "grid@localhost" and time_from_now(self.last_message["grid"]) > 10:
+                elif sender == "grid@localhost" and time_from_now(self.last_message["grid"]) > 3:
                     print("[FacilitatingAgent] Grid status received.")
                     self.last_message["grid"]["time"] = datetime.now()
                     self.last_message["grid"]["msg"] = json.loads(msg.body)
+                    st.session_state["grid"] = (f"Grid status received: {msg.body}")
 
                 else:
                     print(f"[FacilitatingAgent] Message received from unknown agent: {sender}")
+
             else:
                 print("[FacilitatingAgent] No message received.")
 
-            print("[FacilitatingAgent] Handling received messages...")
+            # Update dependencies and send responses if needed
             for agent in self.dependencies:
-
-                # Check for unresolved dependencies
-                print(f"[FacilitatingAgent] Checking {agent} dependencies...")
                 unresolved_dependencies = []
                 for dependency in self.dependencies[agent]:
-                    if time_from_now(self.last_message[dependency]) > 10:
+                    if time_from_now(self.last_message[dependency]) > 3:
                         unresolved_dependencies.append(dependency)
 
-                # If the agent has dependencies
                 if len(self.dependencies[agent]) != 0:
-
-                    #  If no dependencies are unresolved
                     if len(unresolved_dependencies) == 0:
                         print(f"[FacilitatingAgent] Dependencies resolved for {agent}, sending message...")
 
-                        # Set message for agent
                         agent_address = f"{agent}@localhost"
-
-                        # Get all the messages from the resolved agents
                         dict = {}
                         for dependency in self.dependencies[agent]:
                             dict[dependency] = self.last_message[dependency]["msg"]
 
-                        # Try sending message
                         try:
                             json_dump = json.dumps(dict)
                             response = Message(to=agent_address, body=json_dump)
                             await self.send(response)
                             print(f"[FacilitatingAgent] Sent message to {agent}")
-
-                            # Set status back to false since agent is thinking of a new answer
-                            # self.resolved[agent]["Status"] = False
-
-                        # If there is an error
                         except json.JSONDecodeError:
-                            print(f"[PredictionAgent] Invalid message format: {msg.body}")
-                            # Set resolved status of dependencies to false as 
-                            # message was corrupted and a new one is needed
-                            
-                    # Print dependencies that have not yet been fulfilled (this way we know if a specific agent is blocking the system)
+                            print(f"[FacilitatingAgent] Invalid message format: {msg.body}")
                     else:
                         print(f"[FacilitatingAgent] Awaiting dependencies for agent {agent}:")
                         for dependency in unresolved_dependencies:
                             print(dependency)
-
-                # Otherwise the agent has no dependencies.
                 else:
                     print(f"[FacilitatingAgent] {agent} has no dependencies.")
-
 
     async def setup(self):
         print("[FacilitatingAgent] Started")
         handler = self.MultiAgentHandler()
         self.add_behaviour(handler)
-        self.web.start(hostname="localhost", port="9097")
+
