@@ -15,23 +15,25 @@ class GUIAgent(Agent):
 
     class guiBehaviour(CyclicBehaviour):
         async def run(self):
-            print("[GUI] Waiting for data...")
-            msg = await self.receive(timeout=5)
-            if msg:
-                try:
-                    data = json.loads(msg.body)
-                    print(f"[GUI] Received data: {data}")
-                    self.energy_production = data["house"].get("energy_production")
-                    self.energy_consumption = data["house"].get("energy_consumption")
-                    self.energy_trade_strategy = data["negotiation"].get("energy_trade_strategy")
-                    self.recommended_appliance_behaviour = data["demandResponse"].get("recommended_appliance_behaviour")
-                except json.JSONDecodeError:
-                    print(f"[NegotiationAgent] Invalid message format: {msg.body}")
+            pass
 
     async def controller(self, request):
+        print("[GUI] Waiting for data...")
+        msg = await self.behaviours[0].receive(timeout=5)
+        if msg:
+            try:
+                data = json.loads(msg.body)
+                print(f"[GUI] Received data: {data}")
+                self.energy_production = data["house"].get("energy_production")
+                self.energy_consumption = data["house"].get("energy_consumption")
+                self.energy_trade_strategy = data["negotiation"].get("energy_trade_strategy")
+                self.recommended_appliance_behaviour = data["demandResponse"].get("recommended_appliance_behaviour")
+                
+            except json.JSONDecodeError:
+                print(f"[GUI] Invalid message format: {msg.body}")
+
         """Handle web requests and return the updated number."""
         print("[GUI] Updating Page")
-        print(f"{self.energy_consumption}")
         return {
             "energy_production": self.energy_production,
             "energy_consumption": self.energy_consumption,
