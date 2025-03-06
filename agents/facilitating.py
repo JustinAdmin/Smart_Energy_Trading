@@ -1,4 +1,3 @@
-import streamlit as st
 import json
 from datetime import datetime
 import asyncio
@@ -37,41 +36,34 @@ class FacilitatingAgent(Agent):
                     print("[FacilitatingAgent] Prediction received.")
                     self.last_message["prediction"]["time"] = datetime.now()
                     self.last_message["prediction"]["msg"] = json.loads(msg.body)
-                    st.session_state["Prediction"] = (f"Prediction received: {msg.body}")
-                    st.write(st.session_state["Prediction"])
 
                 elif sender == "demandResponse@localhost" and time_from_now(self.last_message["demandResponse"]) > 3:
                     print("[FacilitatingAgent] Demand response received.")
                     self.last_message["demandResponse"]["time"] = datetime.now()
                     self.last_message["demandResponse"]["msg"] = json.loads(msg.body)
-                    st.session_state["demandResponse"] = (f"Demand response received: {msg.body}")
 
                 elif sender == "negotiation@localhost" and time_from_now(self.last_message["negotiation"]) > 3:
                     print("[FacilitatingAgent] Negotiation message received.")
                     self.last_message["negotiation"]["time"] = datetime.now()
                     self.last_message["negotiation"]["msg"] = json.loads(msg.body)
-                    st.session_state["negotiation"] = (f"Negotiation message received: {msg.body}")
 
                 elif sender == "behavioralsegmentation@localhost" and time_from_now(self.last_message["behavioralsegmentation"]) > 3:
                     print("[FacilitatingAgent] Behavioral segmentation message received.")
                     self.last_message["behavioralsegmentation"]["time"] = datetime.now()
                     self.last_message["behavioralsegmentation"]["msg"] = json.loads(msg.body)
-                    st.session_state["behavioralsegmentation"] = (f"Behavioral segmentation message received: {msg.body}")
 
                 elif sender == "house@localhost" and time_from_now(self.last_message["house"]) > 3:
                     print("[FacilitatingAgent] House status received.")
                     self.last_message["house"]["time"] = datetime.now()
                     self.last_message["house"]["msg"] = json.loads(msg.body)
-                    st.session_state["house"] = (f"House status received: {msg.body}")
 
                 elif sender == "grid@localhost" and time_from_now(self.last_message["grid"]) > 3:
                     print("[FacilitatingAgent] Grid status received.")
                     self.last_message["grid"]["time"] = datetime.now()
                     self.last_message["grid"]["msg"] = json.loads(msg.body)
-                    st.session_state["grid"] = (f"Grid status received: {msg.body}")
 
                 else:
-                    print(f"[FacilitatingAgent] Message received from unknown agent: {sender}")
+                    print(f"[FacilitatingAgent] !!Message received from unknown agent: {sender}!!")
 
             else:
                 print("[FacilitatingAgent] No message received.")
@@ -80,7 +72,7 @@ class FacilitatingAgent(Agent):
             for agent in self.dependencies:
                 unresolved_dependencies = []
                 for dependency in self.dependencies[agent]:
-                    if time_from_now(self.last_message[dependency]) > 3:
+                    if time_from_now(self.last_message[dependency]) > 10:
                         unresolved_dependencies.append(dependency)
 
                 if len(self.dependencies[agent]) != 0:

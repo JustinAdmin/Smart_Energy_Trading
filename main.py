@@ -6,15 +6,18 @@ from agents.facilitating import FacilitatingAgent
 from agents.negotiation import NegotiationAgent
 from agents.prediction import PredictionAgent
 
+from agents.gui import GUIAgent
+
 from test_agents.grid import Grid
 from test_agents.house import House
 import asyncio
 
 import streamlit as st
 
-# This is what our main file will look like (except with all our agents)
+
 async def main():
     # Create agents
+    gui = GUIAgent("gui@localhost", "password")
     house = House("house@localhost", "password")
     grid = Grid("grid@localhost", "password")
     behavioral_segmentation_agent = BehavioralSegmentationAgent("behavioralsegmentation@localhost", "password")
@@ -25,6 +28,7 @@ async def main():
     
 
     # Start agents
+    await gui.start()
     await house.start()
     await grid.start()
     await behavioral_segmentation_agent.start()
