@@ -1,24 +1,19 @@
+## docker containter help:(optional)
+
+docker build -t energy-trading .
+docker run -it --rm -v ${PWD}:/app -w /app energy-trading /bin/bash
+
 # Using Winget to manage package installations:
 
-    # Step 1: Navigate to your project directory where you want to install Hardhat:
     cd \energy-trading  # Replace with your actual project directory path
 
-    # Step 2: Download and install FNM (Fast Node Manager) using Winget:
     # This allows for quick management of different Node.js versions.
-    winget install Schniz.fnm
-
-    # Step 3: Install Node.js version 18 using FNM:
-    # This ensures you're using a compatible Node.js version (18.x) for Hardhat.
+    winget install Schniz.fnm # run in admin power PowerShell
     fnm install 18
-
-    # Step 4: Verify the installed version of Node.js:
-    # This command checks if Node.js 18 is successfully installed.
     node -v # Should print "v18.x.x".
-
-    # Step 5: Verify the npm (Node Package Manager) version:
-    # This checks the installed version of npm to ensure compatibility.
     npm -v # Should print an npm version like "10.x.x".
-
+    npm install dotenv --save
+    
 # If Winget and FNM don't work or if you're having trouble, you can use NVM (Node Version Manager):
 # Download and install NVM for Windows from the following link:
 # https://github.com/coreybutler/nvm-windows/releases
@@ -28,24 +23,29 @@
 # Step 2: After installing NVM, open a new PowerShell window and use the following command to install Node.js version 18:
 cd \energy-trading  # Make sure you're in your project directory
 nvm install 18
+fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+    # Step 3: Set Node.js version 18 as the active version:
+    #nvm use 18
+fnm use 18
 
-# Step 3: Set Node.js version 18 as the active version:
-nvm use 18
-
-# Install Hardhat (Ethereum Development Framework):
-
-        # Step 1: Install Hardhat as a development dependency:
-        # This will install Hardhat in your project directory.
+# Install Hardhat (Ethereum Development Framework) MUST BE CMD terminal:
+Open up a cmd terminal in VScode in the energy-trading folder first
+        # Step 1: Install Hardhat as a development dependency: This will install Hardhat in your project directory.
     npm install --save-dev hardhat
-
+            # dotenv should already be install but you may run this below to check the packages are already up-to-date
+            #npm install dotenv --save
         # Step 2: Install Hardhat Toolbox:
-        # The Hardhat Toolbox includes useful plugins for working with smart contracts, deployment, and more.
-    npm install --save-dev @nomicfoundation/hardhat-toolbox
+        #npm install --save-dev @nomicfoundation/hardhat-toolbox
 
         # Step 3: Install Hardhat Ethers plugin and Ethers.js:
         # This will allow you to interact with the Ethereum network and deploy contracts with Ethers.js.
-    npm install --save-dev @nomicfoundation/hardhat-ethers ethers
+        #npm install --save-dev @nomicfoundation/hardhat-ethers
+        
+        # add hardhat to env path
+    $env:Path += ";$PWD\node_modules\.bin"
 
+        #run this command to check the scope of hardhat install location
+    npm list hardhat
 # Initialize the Hardhat project:
 
         # Step 1: Create a Hardhat project by running:
@@ -71,3 +71,17 @@ nvm use 18
         # Step 1: Run the deployment script:
         # This deploys the smart contract to the local Ethereum blockchain (running on localhost).
     npx hardhat run scripts/deploy.js --network localhost
+
+#run this code to check if this code is connected to the blockchain.
+    
+    node script.js
+
+
+#lastly, if the solidity EnergyTrading.sol contract is set up the way its intended you can deploy the contract on the blockchain now.
+
+npx hardhat run scripts/deploy.js --network sepolia
+
+# should return 
+    #EnergyTrading deployed to: 0xe37baD0ebecffBecaB13A53DEb58b051ca4dFAd3
+
+    

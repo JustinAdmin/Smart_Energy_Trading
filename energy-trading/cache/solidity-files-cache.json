@@ -6,7 +6,7 @@
       "contentHash": "32996e24c5c2a501fce989cccf1dc8ed",
       "sourceName": "contracts/EnergyTrading.sol",
       "solcConfig": {
-        "version": "0.8.28",
+        "version": "0.8.20",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
