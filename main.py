@@ -1,21 +1,34 @@
-# Must use "spade run" command before running code
-
+import subprocess
+import time
+import asyncio
+import streamlit as st
 from agents.behavioralSegmentation import BehavioralSegmentationAgent
 from agents.demandResponse import DemandResponseAgent
 from agents.facilitating import FacilitatingAgent
 from agents.negotiation import NegotiationAgent
 from agents.prediction import PredictionAgent
-
 from agents.gui import GUIAgent
-
 from test_agents.grid import Grid
 from test_agents.house import House
-import asyncio
 
-import streamlit as st
+def start_spade():
+    """Starts the SPADE agent system in a new PowerShell window."""
+    print("🟡 Starting SPADE server in a new PowerShell window...")
+    spade_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'spade run'"])
+    time.sleep(5)  # Give SPADE some time to start
+    print("✅ SPADE server started in a separate window!")
+    return spade_process
 
+def start_streamlit():
+    """Starts the Streamlit dashboard in a new PowerShell window."""
+    print("🟡 Starting Streamlit UI in a new PowerShell window...")
+    streamlit_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'streamlit run streamlit_gui.py'"])
+    print("✅ Streamlit UI started in a separate window!")
+    return streamlit_process
 
 async def main():
+    print("🟡 Initializing agents...")
+    
     # Create agents
     gui = GUIAgent("gui@localhost", "password")
     house = House("house@localhost", "password")
@@ -25,7 +38,6 @@ async def main():
     negotiation_agent = NegotiationAgent("negotiation@localhost", "password")
     prediction_agent = PredictionAgent("prediction@localhost", "password")
     facilitating_agent = FacilitatingAgent("facilitating@localhost", "password")
-    
 
     # Start agents
     await gui.start()
@@ -36,19 +48,19 @@ async def main():
     await negotiation_agent.start()
     await prediction_agent.start()
     await facilitating_agent.start()
-
-    st.title("Multi-Agent System: Facilitating Agent Messages")
-    st.write("Messages will update as the Facilitating Agent receives them.")
-
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    # Display the messages live
-    st.write("Latest Messages:")
-    for message in st.session_state.messages:
-        st.write(message)
+    print("✅ All agents started!")
 
 
-# Run the multi-agent system
 if __name__ == "__main__":
+    print("🚀 Launching the Multi-Agent System...")
+    
+    spade_process = start_spade()  # Start SPADE server
+    streamlit_process = start_streamlit()  # Start Streamlit UI
+    
+    print("🟡 Running Multi-Agent System...")
     asyncio.run(main())
+
+    print("🛑 Shutting down processes...")
+    spade_process.terminate()
+    streamlit_process.terminate()
+    print("✅ Cleanup complete. Exiting.")
