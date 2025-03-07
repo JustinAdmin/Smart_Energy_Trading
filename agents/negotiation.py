@@ -30,7 +30,7 @@ class NegotiationAgent(Agent):
             msg = await self.receive(timeout=5)
             if msg:
                 try:
-                    data = json.loads(msg.body)
+                    data = json.loads(msg.body).get("house")
                     print(f"[NegotiationAgent] Received data: {data}")
 
                     # If there is surplus energy, create a trade on the blockchain
@@ -44,6 +44,7 @@ class NegotiationAgent(Agent):
                         # Send trade confirmation to Facilitating Agent
                         response = Message(to="facilitating@localhost")
                         response.body = json.dumps({"traded_energy": trade_amount, "tx_hash": tx_hash})
+
                         await self.send(response)
                         print(f"[NegotiationAgent] Sent trade decision to FacilitatingAgent: {response.body}")
 

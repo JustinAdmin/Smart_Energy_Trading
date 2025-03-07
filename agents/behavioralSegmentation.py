@@ -11,7 +11,7 @@ class BehavioralSegmentationAgent(Agent):
             msg = await self.receive(timeout=5)
             if msg:
                 try:
-                    data = json.loads(msg.body)
+                    data = json.loads(msg.body).get("house")
                     print(f"[BehavioralSegmentationAgent] Received data: {data}")
                     prioritized_appliances = sorted(data["appliances"], key=lambda x: x["priority"], reverse=True)
                     response = Message(to="facilitating@localhost")
