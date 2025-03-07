@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\Justin.V\\Documents\\5014-Project\\energy-trading\\contracts\\EnergyTrading.sol": {
-      "lastModificationDate": 1741023500625,
-      "contentHash": "32996e24c5c2a501fce989cccf1dc8ed",
+      "lastModificationDate": 1741316519592,
+      "contentHash": "295e13359c64664212fa1d415f49f6ad",
       "sourceName": "contracts/EnergyTrading.sol",
       "solcConfig": {
         "version": "0.8.20",

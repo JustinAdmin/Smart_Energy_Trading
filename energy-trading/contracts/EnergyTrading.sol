@@ -37,4 +37,8 @@ contract EnergyTrading {
         require(tradeId < trades.length, "Trade does not exist");
         return trades[tradeId];
     }
+
+    function getTradesLength() public view returns (uint256) {
+        return trades.length;
+    }
 }

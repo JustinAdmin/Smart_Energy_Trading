@@ -68,14 +68,9 @@ Open up a cmd terminal in VScode in the energy-trading folder first
 
 # Deploy your smart contracts:
 
-        # Step 1: Run the deployment script:
-        # This deploys the smart contract to the local Ethereum blockchain (running on localhost).
-    npx hardhat run scripts/deploy.js --network localhost
-
 #run this code to check if this code is connected to the blockchain.
     
     node script.js
-
 
 #lastly, if the solidity EnergyTrading.sol contract is set up the way its intended you can deploy the contract on the blockchain now.
 
@@ -84,4 +79,3 @@ npx hardhat run scripts/deploy.js --network sepolia
 # should return 
     #EnergyTrading deployed to: 0xe37baD0ebecffBecaB13A53DEb58b051ca4dFAd3
 
-    
