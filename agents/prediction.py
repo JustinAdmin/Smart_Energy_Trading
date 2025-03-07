@@ -13,10 +13,10 @@ class PredictionAgent(Agent):
             msg = await self.receive(timeout=5)
             if msg:
                 try:
-                    data = json.loads(msg.body)
+                    data = json.loads(msg.body).get("house")
                     print(f"[PredictionAgent] Received data: {data}")
-                    predicted_demand = data['house']['current_demand'] * 1.05  # Simple prediction logic
-                    predicted_production = data['house']['current_production'] * 0.95
+                    predicted_demand = data['current_demand'] * 1.05  # Simple prediction logic
+                    predicted_production = data['current_production'] * 0.95
                     response = Message(to="facilitating@localhost")
                     response.body = json.dumps({
                         "predicted_demand": predicted_demand,

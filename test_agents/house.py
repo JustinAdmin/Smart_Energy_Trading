@@ -13,8 +13,28 @@ class House(Agent):
             response = Message(to="facilitating@localhost")
             response.body = json.dumps({
                 "current_demand": 100,
-                "current_production": 100
-            })
+                "current_production": 100,
+                "appliances":[{
+                        "item": "Blender",
+                        "priority": 1
+                    },
+                    {
+                        "item": "Game System",
+                        "priority": 1
+                    },
+                    {
+                        "item": "TV",
+                        "priority": 1
+                    },
+                    {
+                        "item": "Heater",
+                        "priority": 4
+                    },
+                    {
+                        "item": "Washing Machine",
+                        "priority": 3
+                    }]
+                })
             await self.send(response)
             print(f"[House] Sent current data to FacilitatingAgent: {response.body}")
 

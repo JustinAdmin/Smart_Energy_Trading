@@ -3,10 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello Page</title>
+    <title>Energy Dashboard</title>
+    <script>
+        setTimeout(() => {
+            location.reload();
+        }, 5000); // Refresh every 5 seconds
+    </script>
 </head>
 <body>
-    <h1>Hello, SPADE Web Interface!</h1>
-    <p>The number is: {{ number }}</p>  <!-- This is where the "number" variable will be rendered -->
+    <h1>Energy Dashboard</h1>
+    <p><strong>Energy Production:</strong> {{ energy_production }}</p>
+    <p><strong>Energy Consumption:</strong> {{ energy_consumption }}</p>
+    <p><strong>Energy Trade Strategy:</strong> {{ energy_trade_strategy }}</p>
+    <h2>Recommended Appliance Behaviours:</h2>
+    <ul>
+        {% for behaviour in recommended_appliance_behaviours %}
+        <li>{{ behaviour }}</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
