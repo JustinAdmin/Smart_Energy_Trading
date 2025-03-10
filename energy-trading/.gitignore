@@ -1,0 +1,2 @@
+# Environment Variables: API keys should not be hardcoded. Use .env to keep them secure.
+.env
