@@ -40,20 +40,24 @@ class GUIAgent(Agent):
     class guiBehaviour(CyclicBehaviour):
         async def run(self):
             print("[GUI] Waiting for data...")
-            msg = await self.receive(timeout=5)  # Correct usage inside run()
+            msg = await self.receive(timeout=30)  # Correct usage inside run()
             if msg:
                 try:
                     data = json.loads(msg.body)
-                    print(f"[GUI] Received data: {data}")
+                    if data["house"] is None or data["negotiation"] is None or data["demandresponse"] is None:
+                        print(f"[GUI] Missing data: {data}")
+                    else:
+                        print(f"[GUI] Received data: {data}")
 
-                    # Use self.agent to store data at the agent level
-                    self.agent.store_data("energy_production", data["house"].get("energy_production", 0))
-                    self.agent.store_data("energy_consumption", data["house"].get("energy_consumption", 0))
-                    self.agent.store_data("energy_trade_strategy", data["negotiation"].get("energy_trade_strategy", "None"))
-                    self.agent.store_data("recommended_appliance_behaviours", json.dumps(data["demandResponse"].get("recommended_appliance_behaviour", [])))
+                        # Use self.agent to store data at the agent level
+                        self.agent.store_data("energy_production", data["house"].get("energy_production", 0))
+                        self.agent.store_data("energy_consumption", data["house"].get("energy_consumption", 0))
+                        self.agent.store_data("energy_trade_strategy", data["negotiation"].get("energy_trade_strategy", "None"))
+                        self.agent.store_data("recommended_appliance_behaviours", json.dumps(data["demandresponse"].get("recommended_appliance_behaviour", [])))
 
-                except json.JSONDecodeError:
-                    print(f"[GUI] Invalid message format: {msg.body}")
+                except Exception as e:
+                    print(f"[GUI] Error: {e}")
+                    print(f"[GUI] {msg}")
 
     async def setup(self):
         print("[GUI] Started")

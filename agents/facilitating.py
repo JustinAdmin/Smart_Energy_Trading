@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 import asyncio
+import time
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message
@@ -26,38 +27,38 @@ class FacilitatingAgent(Agent):
                 return (datetime.now() - message_timing["time"]).total_seconds()
             
             # Wait for messages from any agent
-            msg = await self.receive(timeout=5)  # Timeout in seconds
+            msg = await self.receive(timeout=1)  # Timeout in seconds
             if msg:
                 sender = str(msg.sender)  # Sender's JID
                 print(f"[FacilitatingAgent] Received message from {sender}: {msg.body}")
 
                 # Example: Handle based on sender
-                if sender == "prediction@localhost" and time_from_now(self.last_message["prediction"]) > 3:
+                if sender == "prediction@localhost" and time_from_now(self.last_message["prediction"]) > 60:
                     print("[FacilitatingAgent] Prediction received.")
                     self.last_message["prediction"]["time"] = datetime.now()
                     self.last_message["prediction"]["msg"] = json.loads(msg.body)
 
-                elif sender == "demandResponse@localhost" and time_from_now(self.last_message["demandResponse"]) > 3:
+                elif sender == "demandResponse@localhost" and time_from_now(self.last_message["demandResponse"]) > 60:
                     print("[FacilitatingAgent] Demand response received.")
                     self.last_message["demandResponse"]["time"] = datetime.now()
                     self.last_message["demandResponse"]["msg"] = json.loads(msg.body)
 
-                elif sender == "negotiation@localhost" and time_from_now(self.last_message["negotiation"]) > 3:
+                elif sender == "negotiation@localhost" and time_from_now(self.last_message["negotiation"]) > 60:
                     print("[FacilitatingAgent] Negotiation message received.")
                     self.last_message["negotiation"]["time"] = datetime.now()
                     self.last_message["negotiation"]["msg"] = json.loads(msg.body)
 
-                elif sender == "behavioralsegmentation@localhost" and time_from_now(self.last_message["behavioralsegmentation"]) > 3:
+                elif sender == "behavioralsegmentation@localhost" and time_from_now(self.last_message["behavioralsegmentation"]) > 60:
                     print("[FacilitatingAgent] Behavioral segmentation message received.")
                     self.last_message["behavioralsegmentation"]["time"] = datetime.now()
                     self.last_message["behavioralsegmentation"]["msg"] = json.loads(msg.body)
 
-                elif sender == "house@localhost" and time_from_now(self.last_message["house"]) > 3:
+                elif sender == "house@localhost" and time_from_now(self.last_message["house"]) > 60:
                     print("[FacilitatingAgent] House status received.")
                     self.last_message["house"]["time"] = datetime.now()
                     self.last_message["house"]["msg"] = json.loads(msg.body)
 
-                elif sender == "grid@localhost" and time_from_now(self.last_message["grid"]) > 3:
+                elif sender == "grid@localhost" and time_from_now(self.last_message["grid"]) > 60:
                     print("[FacilitatingAgent] Grid status received.")
                     self.last_message["grid"]["time"] = datetime.now()
                     self.last_message["grid"]["msg"] = json.loads(msg.body)
@@ -70,9 +71,10 @@ class FacilitatingAgent(Agent):
 
             # Update dependencies and send responses if needed
             for agent in self.dependencies:
+                time.sleep(1)
                 unresolved_dependencies = []
                 for dependency in self.dependencies[agent]:
-                    if time_from_now(self.last_message[dependency]) > 10:
+                    if time_from_now(self.last_message[dependency]) > 300:
                         unresolved_dependencies.append(dependency)
 
                 if len(self.dependencies[agent]) != 0:

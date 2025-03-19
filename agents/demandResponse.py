@@ -34,38 +34,42 @@ class DemandResponseAgent(Agent):
     class DRBehaviour(CyclicBehaviour):
         async def run(self):
             print("[DemandResponseAgent] Waiting for grid data...")
-            msg = await self.receive(timeout=5)
+            msg = await self.receive(timeout=30)
             if msg:
                 try:
                     # Get grid data and timestamp
                     data = json.loads(msg.body).get("grid")
-                    timestamp = data.get("timestamp")  # Expected to be in UNIX timestamp format
-                    
-                    # Get the current energy rate based on the timestamp
-                    energy_rate = get_energy_rate(timestamp)
-                    print(f"[DemandResponseAgent] Current energy rate: {energy_rate} CAD per kWh")
-
-                    print(f"[DemandResponseAgent] Received grid data: {data}")
-                    if data.get("grid_demand") > 50:  # High grid demand condition
-                        curtailment = data["household_power"] * 0.2
+                    if data is None:
+                        print("[DemandResponseAgent] No grid data received")
                     else:
-                        curtailment = 0
-                    
-                    # Prepare the response with curtailment and energy rate
-                    response = Message(to="facilitating@localhost")
-                    response.body = json.dumps({
-                        "curtailment": curtailment,
-                        "recommended_appliance_behaviour": [
-                            "Shut Off Blender", "Don't use Washing Machine", "Keep heater off between 4:00pm and 8:00pm"
-                        ],
-                        "energy_rate": energy_rate  # Send the determined energy rate along with the curtailment data
-                    })
-                    
-                    await self.send(response)
-                    print(f"[DemandResponseAgent] Sent curtailment and energy rate to FacilitatingAgent: {response.body}")
+                        timestamp = data.get("timestamp")  # Expected to be in UNIX timestamp format
+                            
+                        # Get the current energy rate based on the timestamp
+                        energy_rate = get_energy_rate(timestamp)
+                        print(f"[DemandResponseAgent] Current energy rate: {energy_rate} CAD per kWh")
 
-                except json.JSONDecodeError:
-                    print(f"[DemandResponseAgent] Invalid message format: {msg.body}")
+                        print(f"[DemandResponseAgent] Received grid data: {data}")
+                        if data.get("grid_demand") > 50:  # High grid demand condition
+                            curtailment = data["household_power"] * 0.2
+                        else:
+                            curtailment = 0
+                        
+                        # Prepare the response with curtailment and energy rate
+                        response = Message(to="facilitating@localhost")
+                        response.body = json.dumps({
+                            "curtailment": curtailment,
+                            "recommended_appliance_behaviour": [
+                                "Shut Off Blender", "Don't use Washing Machine", "Keep heater off between 4:00pm and 8:00pm"
+                            ],
+                            "energy_rate": energy_rate  # Send the determined energy rate along with the curtailment data
+                        })
+                        
+                        await self.send(response)
+                        print(f"[DemandResponseAgent] Sent curtailment and energy rate to FacilitatingAgent: {response.body}")
+
+                except Exception as e:
+                    print(f"[DemandResponseAgent] Error: {e}")
+                    print(f"[DemandResponseAgent] {msg}")
     
     async def setup(self):
         print("[DemandResponseAgent] Started")

@@ -76,32 +76,36 @@ class NegotiationAgent(Agent):
     class TradingBehaviour(CyclicBehaviour):
         async def run(self):
             print("[NegotiationAgent] Waiting for surplus energy data...")
-            msg = await self.receive(timeout=5)
+            msg = await self.receive(timeout=30)
             if msg:
                 try:
                     data = json.loads(msg.body).get("house")
-                    print(f"[NegotiationAgent] Received data: {data}")
+                    if data is None:
+                        print("[NegotiationAgent] No data received")
+                    else:
+                        print(f"[NegotiationAgent] Received data: {data}")
 
-                    # If there is surplus energy, create a trade on the blockchain
-                    if data.get("surplus_energy") > 0:
-                        trade_amount = min(data["surplus_energy"], 2.0)  # Trade rule
-                        trade_price = trade_amount * 1  # Example pricing rule (1 CAD per kWh)
-                        #Note: The trade price should be determined by the Demand agent based on the market conditions
-                        
-                        # Execute blockchain transaction
-                        #tx_hash = create_trade(trade_amount, trade_price)
-                        tx_hash = "0x1234567890"
-                        print(f"[NegotiationAgent] Created fake trade: {trade_amount} kWh at {trade_price} CAD per kWh")
-                        
-                        # Send trade confirmation to Facilitating Agent
-                        response = Message(to="facilitating@localhost")
-                        response.body = json.dumps({"traded_energy": trade_amount, "tx_hash": tx_hash})
+                        # If there is surplus energy, create a trade on the blockchain
+                        if data.get("surplus_energy") > 0:
+                            trade_amount = min(data["surplus_energy"], 2.0)  # Trade rule
+                            trade_price = trade_amount * 1  # Example pricing rule (1 CAD per kWh)
+                            #Note: The trade price should be determined by the Demand agent based on the market conditions
+                            
+                            # Execute blockchain transaction
+                            #tx_hash = create_trade(trade_amount, trade_price)
+                            tx_hash = "0x1234567890"
+                            print(f"[NegotiationAgent] Created fake trade: {trade_amount} kWh at {trade_price} CAD per kWh")
+                            
+                            # Send trade confirmation to Facilitating Agent
+                            response = Message(to="facilitating@localhost")
+                            response.body = json.dumps({"traded_energy": trade_amount, "tx_hash": tx_hash})
 
-                        await self.send(response)
-                        print(f"[NegotiationAgent] Sent trade decision to FacilitatingAgent: {response.body}")
+                            await self.send(response)
+                            print(f"[NegotiationAgent] Sent trade decision to FacilitatingAgent: {response.body}")
 
-                except json.JSONDecodeError:
-                    print(f"[NegotiationAgent] Invalid message format: {msg.body}")
+                except Exception as e:
+                    print(f"[NegotiationAgent] Error: {e}")
+                    print(f"[NegotiationAgent] {msg}")
 
     async def setup(self):
         print("[NegotiationAgent] Started")
