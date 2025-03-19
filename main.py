@@ -9,8 +9,8 @@ from agents.facilitating import FacilitatingAgent
 from agents.negotiation import NegotiationAgent
 from agents.prediction import PredictionAgent
 from agents.gui import GUIAgent
-from test_agents.grid import Grid
-from test_agents.house import House
+from agents.grid import Grid
+from agents.house import House
 
 def start_spade():
     print("🟡 Starting SPADE server in a new PowerShell window...")
