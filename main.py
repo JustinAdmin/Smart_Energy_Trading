@@ -12,47 +12,6 @@ from agents.gui import GUIAgent
 from test_agents.grid import Grid
 from test_agents.house import House
 
-GANACHE_PORT = 7545
-GANACHE_DB_PATH = "./ganache-data"
-
-def is_ganache_running():
-    try:
-        response = requests.post(f"http://localhost:{GANACHE_PORT}", json={})
-        return response.status_code == 200
-    except requests.exceptions.ConnectionError:
-        return False
-
-def start_ganache():
-    if is_ganache_running():
-        print(f"✅ Ganache is already running on port {GANACHE_PORT}")
-        return None
-
-    print("🟡 Starting Ganache...")
-    if not os.path.exists(GANACHE_DB_PATH):
-        os.makedirs(GANACHE_DB_PATH)
-
-    ganache_process = subprocess.Popen([
-        "npx", "ganache",
-        "--port", str(GANACHE_PORT),
-        "--db", GANACHE_DB_PATH,
-        "--chainId", "1337",
-        "--server", "localhost",
-        "--defaultBalanceEther", "1000"
-    ])
-
-    # Wait until Ganache is ready
-    while not is_ganache_running():
-        time.sleep(1)
-
-    print(f"✅ Ganache started on port {GANACHE_PORT}")
-    return ganache_process
-
-def deploy_contract():
-    print("🟡 Deploying contract...")
-    subprocess.run(["npx", "hardhat", "run", "scripts/deploy.js", "--network", "localhost"])
-    print("✅ Contract deployed successfully.")
-    time.sleep(2)
-
 def start_spade():
     print("🟡 Starting SPADE server in a new PowerShell window...")
     spade_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'spade run'"])
@@ -90,9 +49,6 @@ async def main():
 if __name__ == "__main__":
     print("🚀 Launching the Multi-Agent System...")
 
-    ganache_process = start_ganache()  # Start Ganache
-    deploy_contract()                 # Deploy Contract
-
     spade_process = start_spade()     # Start SPADE server
     streamlit_process = start_streamlit()  # Start Streamlit UI
 
@@ -101,9 +57,6 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("🛑 Shutting down processes...")
-        if ganache_process:
-            ganache_process.terminate()
-            ganache_process.wait()
         spade_process.terminate()
         streamlit_process.terminate()
         print("✅ Cleanup complete. Exiting.")
