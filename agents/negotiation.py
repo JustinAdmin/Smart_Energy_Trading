@@ -103,8 +103,9 @@ class NegotiationAgent(Agent):
                             await self.send(response)
                             print(f"[NegotiationAgent] Sent trade decision to FacilitatingAgent: {response.body}")
 
-                except json.JSONDecodeError:
-                    print(f"[NegotiationAgent] Invalid message format: {msg.body}")
+                except Exception as e:
+                    print(f"[NegotiationAgent] Error: {e}")
+                    print(f"[NegotiationAgent] {msg}")
 
     async def setup(self):
         print("[NegotiationAgent] Started")

@@ -55,8 +55,9 @@ class GUIAgent(Agent):
                         self.agent.store_data("energy_trade_strategy", data["negotiation"].get("energy_trade_strategy", "None"))
                         self.agent.store_data("recommended_appliance_behaviours", json.dumps(data["demandresponse"].get("recommended_appliance_behaviour", [])))
 
-                except json.JSONDecodeError:
-                    print(f"[GUI] Invalid message format: {msg.body}")
+                except Exception as e:
+                    print(f"[GUI] Error: {e}")
+                    print(f"[GUI] {msg}")
 
     async def setup(self):
         print("[GUI] Started")
