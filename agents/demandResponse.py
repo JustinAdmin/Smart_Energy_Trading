@@ -42,6 +42,7 @@ class DemandResponseAgent(Agent):
                     if data is None:
                         print("[DemandResponseAgent] No grid data received")
                     else:
+                        print(f"[DemandResponseAgent] Received grid data: {data}")
                         timestamp = data.get("timestamp")  # Expected to be in UNIX timestamp format
                             
                         # Get the current energy rate based on the timestamp

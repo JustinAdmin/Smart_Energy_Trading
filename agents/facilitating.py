@@ -64,7 +64,7 @@ class FacilitatingAgent(Agent):
                     self.last_message["grid"]["msg"] = json.loads(msg.body)
 
                 else:
-                    print(f"[FacilitatingAgent] !!Message received from unknown agent: {sender}!!")
+                    print(f"[FacilitatingAgent] !!Timeout: {sender}!!")
 
             else:
                 print("[FacilitatingAgent] No message received.")
