@@ -12,7 +12,7 @@ from agents.gui import GUIAgent
 from test_agents.grid import Grid
 from test_agents.house import House
 
-GANACHE_PORT = 8545
+GANACHE_PORT = 7545
 GANACHE_DB_PATH = "./ganache-data"
 
 def is_ganache_running():
