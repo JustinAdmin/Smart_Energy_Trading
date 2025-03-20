@@ -15,7 +15,7 @@ class House(Agent):
             data_path = os.path.join(project_dir,"models", "energy_test_set.npz")
             data = np.load(data_path)
             self.X_test = data["X_test"]
-            self.Y_test = data["Y_test"]
+            self.Y_test = data["y_test"]
 
         async def run(self):
             await asyncio.sleep(5)
@@ -33,34 +33,20 @@ class House(Agent):
             response = Message(to="facilitating@localhost")
 
             response.body = json.dumps({
-                "current_demand": current_demand,
-                "current_production": current_production,
-                "test_sample": test_sample,
-                "appliances":[{
-                        "item": "Blender",
-                        "priority": 1
-                    },
-                    {
-                        "item": "Game System",
-                        "priority": 1
-                    },
-                    {
-                        "item": "TV",
-                        "priority": 1
-                    },
-                    {
-                        "item": "Heater",
-                        "priority": 4
-                    },
-                    {
-                        "item": "Washing Machine",
-                        "priority": 3
-                    }]
+                    "current_demand": current_demand,
+                    "current_production": current_production,
+                    "test_sample": test_sample.tolist(),  # Convert NumPy array to a Python list
+                    "appliances": [
+                        {"item": "Blender", "priority": 1},
+                        {"item": "Game System", "priority": 1},
+                        {"item": "TV", "priority": 1},
+                        {"item": "Heater", "priority": 4},
+                        {"item": "Washing Machine", "priority": 3}
+                    ]
                 })
             await self.send(response)
             print(f"[House] Sent current data to FacilitatingAgent: {response.body}")
 
-    
     async def setup(self):
         print("[House] Started")
         self.add_behaviour(self.HouseStatus())

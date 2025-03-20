@@ -30,7 +30,7 @@ X_scaled = data["X_scaled"]
 # Select a Random Sample from Test Set
 random_idx = random.randint(0, len(X_test) - 1)  # Pick a random index
 random_test_sample = X_test[random_idx].reshape(1, X_test.shape[1], 1)  # Reshape for LSTM input
-
+#print(f"🔹 Random Test Set Sample: {random_test_sample.shape}")#=>(1,18,1)
 # Make Prediction
 random_prediction = model.predict(random_test_sample)
 
