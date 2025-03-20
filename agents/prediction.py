@@ -3,12 +3,14 @@ from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 import json
 import time
+import asyncio
 
 # Prediction Agent: Forecasts energy demand and production
 class PredictionAgent(Agent):
     class PredictBehaviour(CyclicBehaviour):
         async def run(self):
             print("[PredictionAgent] Waiting for input data...")
+            await asyncio.sleep(5)
             msg = await self.receive(timeout=30)
             if msg:
                 try:

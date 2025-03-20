@@ -1,11 +1,13 @@
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message
-from web3 import Web3
+# from web3 import Web3
 import json
-import os
-from dotenv import load_dotenv  # pip install python-dotenv
+# import os
+# from dotenv import load_dotenv  # pip install python-dotenv
+import asyncio
 
+'''
 # Load environment variables from .env file
 # Load .env file from a different folder (e.g., "config" folder)
 dotenv_path = os.path.join("energy-trading", ".env")
@@ -70,12 +72,14 @@ def create_trade(energy_amount, price):
     
     print("✅ Trade Created. TX Hash:", web3.to_hex(tx_hash))
     return web3.to_hex(tx_hash)
+'''
 
 # Negotiation Agent: Facilitates peer-to-peer energy trading
 class NegotiationAgent(Agent):
     class TradingBehaviour(CyclicBehaviour):
         async def run(self):
             print("[NegotiationAgent] Waiting for surplus energy data...")
+            await asyncio.sleep(5)
             msg = await self.receive(timeout=30)
             if msg:
                 try:
@@ -84,10 +88,11 @@ class NegotiationAgent(Agent):
                         print("[NegotiationAgent] No data received")
                     else:
                         print(f"[NegotiationAgent] Received data: {data}")
+                        surplus_energy = data.get("current_production") - data.get("current_demand")
 
                         # If there is surplus energy, create a trade on the blockchain
-                        if data.get("surplus_energy") > 0:
-                            trade_amount = min(data["surplus_energy"], 2.0)  # Trade rule
+                        if surplus_energy > 0:
+                            trade_amount = min(surplus_energy, 2.0)  # Trade rule
                             trade_price = trade_amount * 1  # Example pricing rule (1 CAD per kWh)
                             #Note: The trade price should be determined by the Demand agent based on the market conditions
                             

@@ -11,12 +11,12 @@ class FacilitatingAgent(Agent):
     class MultiAgentHandler(CyclicBehaviour):
         async def on_start(self):
             self.dependencies = {
-                "gui": ["house", "negotiation", "demandResponse"],
+                "gui": ["house"], # , "negotiation", "behavioralsegmentation"
                 "prediction": ["house"],
-                "demandResponse": ["grid", "behavioralsegmentation"],
+                "demandresponse": ["grid", "house"],
                 "negotiation": ["house", "prediction"],
-                "behavioralsegmentation": ["prediction", "house"],
-                "grid" : ["negotiation"],
+                "behavioralsegmentation": ["house", "demandresponse"],
+                "grid" : [],
                 "house" : []
             }
             self.last_message = {agent: {"time": datetime.now(), "msg": None} for agent in self.dependencies}
@@ -33,32 +33,32 @@ class FacilitatingAgent(Agent):
                 print(f"[FacilitatingAgent] Received message from {sender}: {msg.body}")
 
                 # Example: Handle based on sender
-                if sender == "prediction@localhost" and time_from_now(self.last_message["prediction"]) > 60:
+                if sender == "prediction@localhost" and time_from_now(self.last_message["prediction"]) > 5:
                     print("[FacilitatingAgent] Prediction received.")
                     self.last_message["prediction"]["time"] = datetime.now()
                     self.last_message["prediction"]["msg"] = json.loads(msg.body)
 
-                elif sender == "demandResponse@localhost" and time_from_now(self.last_message["demandResponse"]) > 60:
+                elif sender == "demandresponse@localhost" and time_from_now(self.last_message["demandresponse"]) > 5:
                     print("[FacilitatingAgent] Demand response received.")
-                    self.last_message["demandResponse"]["time"] = datetime.now()
-                    self.last_message["demandResponse"]["msg"] = json.loads(msg.body)
+                    self.last_message["demandresponse"]["time"] = datetime.now()
+                    self.last_message["demandresponse"]["msg"] = json.loads(msg.body)
 
-                elif sender == "negotiation@localhost" and time_from_now(self.last_message["negotiation"]) > 60:
+                elif sender == "negotiation@localhost" and time_from_now(self.last_message["negotiation"]) > 5:
                     print("[FacilitatingAgent] Negotiation message received.")
                     self.last_message["negotiation"]["time"] = datetime.now()
                     self.last_message["negotiation"]["msg"] = json.loads(msg.body)
 
-                elif sender == "behavioralsegmentation@localhost" and time_from_now(self.last_message["behavioralsegmentation"]) > 60:
+                elif sender == "behavioralsegmentation@localhost" and time_from_now(self.last_message["behavioralsegmentation"]) > 5:
                     print("[FacilitatingAgent] Behavioral segmentation message received.")
                     self.last_message["behavioralsegmentation"]["time"] = datetime.now()
                     self.last_message["behavioralsegmentation"]["msg"] = json.loads(msg.body)
 
-                elif sender == "house@localhost" and time_from_now(self.last_message["house"]) > 60:
+                elif sender == "house@localhost" and time_from_now(self.last_message["house"]) > 5:
                     print("[FacilitatingAgent] House status received.")
                     self.last_message["house"]["time"] = datetime.now()
                     self.last_message["house"]["msg"] = json.loads(msg.body)
 
-                elif sender == "grid@localhost" and time_from_now(self.last_message["grid"]) > 60:
+                elif sender == "grid@localhost" and time_from_now(self.last_message["grid"]) > 5:
                     print("[FacilitatingAgent] Grid status received.")
                     self.last_message["grid"]["time"] = datetime.now()
                     self.last_message["grid"]["msg"] = json.loads(msg.body)
@@ -71,10 +71,10 @@ class FacilitatingAgent(Agent):
 
             # Update dependencies and send responses if needed
             for agent in self.dependencies:
-                time.sleep(1)
+                
                 unresolved_dependencies = []
                 for dependency in self.dependencies[agent]:
-                    if time_from_now(self.last_message[dependency]) > 300:
+                    if time_from_now(self.last_message[dependency]) > 30:
                         unresolved_dependencies.append(dependency)
 
                 if len(self.dependencies[agent]) != 0:

@@ -1,8 +1,6 @@
 import subprocess
 import time
 import asyncio
-import requests
-import os
 from agents.behavioralSegmentation import BehavioralSegmentationAgent
 from agents.demandResponse import DemandResponseAgent
 from agents.facilitating import FacilitatingAgent
@@ -27,11 +25,12 @@ def start_streamlit():
 
 async def main():
     print("🟡 Initializing agents...")
+
     gui = GUIAgent("gui@localhost", "password")
     house = House("house@localhost", "password")
     grid = Grid("grid@localhost", "password")
     behavioral_segmentation_agent = BehavioralSegmentationAgent("behavioralsegmentation@localhost", "password")
-    demand_response_agent = DemandResponseAgent("demandResponse@localhost", "password")
+    demand_response_agent = DemandResponseAgent("demandresponse@localhost", "password")
     negotiation_agent = NegotiationAgent("negotiation@localhost", "password")
     prediction_agent = PredictionAgent("prediction@localhost", "password")
     facilitating_agent = FacilitatingAgent("facilitating@localhost", "password")

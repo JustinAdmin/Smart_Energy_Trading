@@ -2,11 +2,13 @@ from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 import json
+import asyncio
 
 # Behavioral Segmentation Agent: Prioritizes appliance usage
 class BehavioralSegmentationAgent(Agent):
     class SegmentationBehaviour(CyclicBehaviour):
         async def run(self):
+            await asyncio.sleep(5)
             print("[BehavioralSegmentationAgent] Waiting for appliance data...")
             msg = await self.receive(timeout=30)
             if msg:

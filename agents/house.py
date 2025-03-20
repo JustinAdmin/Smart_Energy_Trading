@@ -3,11 +3,13 @@ from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 import json
 import time
+import asyncio
 
 # Negotiation Agent: Facilitates peer-to-peer energy trading
 class House(Agent):
     class HouseStatus(CyclicBehaviour):
         async def run(self):
+            await asyncio.sleep(5)
             print("[House] Sending current consumption and production data...")
             msg = await self.receive(timeout=5)
             response = Message(to="facilitating@localhost")

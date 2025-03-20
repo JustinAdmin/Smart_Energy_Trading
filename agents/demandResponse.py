@@ -4,6 +4,7 @@ from spade.message import Message
 import json
 from datetime import datetime
 import time
+import asyncio
 
 # Function to determine the current energy rate based on timestamp
 def get_energy_rate(timestamp):
@@ -36,6 +37,7 @@ class DemandResponseAgent(Agent):
         async def run(self):
             print("[DemandResponseAgent] Waiting for grid data...")
             msg = await self.receive(timeout=30)
+            await asyncio.sleep(5)
             if msg:
                 try:
                     # Get grid data and timestamp
