@@ -27,7 +27,7 @@ class FacilitatingAgent(Agent):
                 return (datetime.now() - message_timing["time"]).total_seconds()
             
             # Wait for messages from any agent
-            msg = await self.receive(timeout=1)  # Timeout in seconds
+            msg = await self.receive(timeout=60)  # Timeout in seconds
             if msg:
                 sender = str(msg.sender)  # Sender's JID
                 print(f"[FacilitatingAgent] Received message from {sender}: {msg.body}")
