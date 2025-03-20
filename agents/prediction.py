@@ -36,8 +36,7 @@ class PredictionAgent(Agent):
                     try:
                         # Extract the 'test_sample' from the data
                         raw_test_sample = data.get("test_sample")
-                        print(f"[PredictionAgent] Raw Test Sample: {raw_test_sample}")
-
+                        
                         # Ensure 'test_sample' exists and is properly formatted
                         if raw_test_sample and isinstance(raw_test_sample, list) and isinstance(raw_test_sample[0], list):
                             # Flatten the inner list to extract the values
@@ -49,7 +48,6 @@ class PredictionAgent(Agent):
                         # Convert the extracted data to a NumPy array and reshape it
                         if extracted_data:
                             test_sample = np.array(extracted_data).reshape(18, 1)
-                            print(f"[PredictionAgent] Reshaped test_sample data shape (after conversion): {test_sample.shape}")
                         else:
                             print("[PredictionAgent] No valid test data extracted. Skipping prediction.")
                             return
