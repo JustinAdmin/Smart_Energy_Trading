@@ -3,6 +3,8 @@ from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 import json
 from datetime import datetime
+import time
+import asyncio
 
 # Function to determine the current energy rate based on timestamp
 def get_energy_rate(timestamp):
@@ -35,6 +37,7 @@ class DemandResponseAgent(Agent):
         async def run(self):
             print("[DemandResponseAgent] Waiting for grid data...")
             msg = await self.receive(timeout=30)
+            await asyncio.sleep(5)
             if msg:
                 try:
                     # Get grid data and timestamp
@@ -42,17 +45,20 @@ class DemandResponseAgent(Agent):
                     if data is None:
                         print("[DemandResponseAgent] No grid data received")
                     else:
-                        timestamp = data.get("timestamp")  # Expected to be in UNIX timestamp format
+                        print(f"[DemandResponseAgent] Received grid data: {data}")
+                        timestamp = time.mktime(datetime.now().timetuple())  # Expected to be in UNIX timestamp format
                             
                         # Get the current energy rate based on the timestamp
                         energy_rate = get_energy_rate(timestamp)
                         print(f"[DemandResponseAgent] Current energy rate: {energy_rate} CAD per kWh")
 
+                        curtailment = 0
+
                         print(f"[DemandResponseAgent] Received grid data: {data}")
                         if data.get("grid_demand") > 50:  # High grid demand condition
                             curtailment = data["household_power"] * 0.2
                         else:
-                            curtailment = 0
+                            pass
                         
                         # Prepare the response with curtailment and energy rate
                         response = Message(to="facilitating@localhost")
