@@ -5,6 +5,10 @@ import json
 from datetime import datetime
 import time
 import asyncio
+import os
+import tensorflow as tf
+import numpy as np
+
 
 # Function to determine the current energy rate based on timestamp
 def get_energy_rate(timestamp):
@@ -34,6 +38,14 @@ def get_energy_rate(timestamp):
 # Demand Response Agent: Manages energy curtailment based on grid demand
 class DemandResponseAgent(Agent):
     class DRBehaviour(CyclicBehaviour):
+        async def on_start(self):
+            # Load the trained LSTM model when the agent starts
+            project_dir = os.path.dirname(os.path.dirname(__file__))
+            model_path_demand = os.path.join(project_dir, "models", "lstm_cnn_demand_predictor.keras")
+            model_path_supply = os.path.join(project_dir, "models", "lstm_cnn_supply_predictor.keras")
+            self.model_demand = tf.keras.models.load_model(model_path_demand)
+            self.model_supply = tf.keras.models.load_model(model_path_supply)
+        
         async def run(self):
             print("[DemandResponseAgent] Waiting for grid data...")
             msg = await self.receive(timeout=30)
@@ -45,29 +57,32 @@ class DemandResponseAgent(Agent):
                     if data is None:
                         print("[DemandResponseAgent] No grid data received")
                     else:
-                        print(f"[DemandResponseAgent] Received grid data: {data}")
-                        timestamp = time.mktime(datetime.now().timetuple())  # Expected to be in UNIX timestamp format
-                            
-                        # Get the current energy rate based on the timestamp
-                        energy_rate = get_energy_rate(timestamp)
-                        print(f"[DemandResponseAgent] Current energy rate: {energy_rate} CAD per kWh")
+                        print(f"[DemandResponseAgent] Received grid data")
+                        test_sample_supply = np.array(data["test_sample_supply"])
+                        test_sample_demand = np.array(data["test_sample_demand"])
 
-                        curtailment = 0
-
-                        print(f"[DemandResponseAgent] Received grid data: {data}")
-                        if data.get("grid_demand") > 50:  # High grid demand condition
-                            curtailment = data["household_power"] * 0.2
-                        else:
-                            pass
+                        predicted_demand = self.model_demand.predict(test_sample_demand)[0][0]
+                        predicted_supply = self.model_supply.predict(test_sample_supply)[0][0]
                         
-                        # Prepare the response with curtailment and energy rate
+                        predicted_demand = predicted_demand * 4924.1 + 13673.1
+                        predicted_supply = predicted_supply * 20667
+
+                        timestamp = time.mktime(datetime.now().timetuple())
+                        energy_rate = get_energy_rate(timestamp)
+                        
+                        curtailment = 0
+                        if predicted_demand > predicted_supply:
+                            curtailment = (predicted_demand - predicted_supply) * 0.1  # 10% curtailment
+                        
                         response = Message(to="facilitating@localhost")
                         response.body = json.dumps({
+                            "predicted_demand": float(predicted_demand),
+                            "predicted_supply": float(predicted_supply),
                             "curtailment": curtailment,
+                            "energy_rate": energy_rate,
                             "recommended_appliance_behaviour": [
-                                "Shut Off Blender", "Don't use Washing Machine", "Keep heater off between 4:00pm and 8:00pm"
-                            ],
-                            "energy_rate": energy_rate  # Send the determined energy rate along with the curtailment data
+                                "Reduce air conditioning usage", "Delay dishwasher cycle", "Limit electric heating between peak hours"
+                            ]
                         })
                         
                         await self.send(response)

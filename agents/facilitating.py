@@ -30,8 +30,10 @@ class FacilitatingAgent(Agent):
             msg = await self.receive(timeout=60)  # Timeout in seconds
             if msg:
                 sender = str(msg.sender)  # Sender's JID
-                print(f"[FacilitatingAgent] Received message from {sender}: {msg.body}")
-
+                if sender != "grid@localhost":
+                    print(f"[FacilitatingAgent] Received message from {sender}: {msg.body}")
+                else:
+                    print(f"[FacilitatingAgent] Recieved message from grid@localhost: [Data too large]")
                 # Example: Handle based on sender
                 if sender == "prediction@localhost" and time_from_now(self.last_message["prediction"]) > 5:
                     print("[FacilitatingAgent] Prediction received.")
