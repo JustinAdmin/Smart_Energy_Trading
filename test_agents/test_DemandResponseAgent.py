@@ -119,7 +119,8 @@ data = dataframe
 # Normalize features using MinMaxScaler
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data)
-
+print(scaler.data_min_)
+print(scaler.data_range_)
 demand_X = scaled_data[:,-8:]
 demand_y = scaled_data[:,:1]
 

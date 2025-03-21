@@ -64,6 +64,9 @@ class DemandResponseAgent(Agent):
                         predicted_demand = self.model_demand.predict(test_sample_demand)[0][0]
                         predicted_supply = self.model_supply.predict(test_sample_supply)[0][0]
                         
+                        predicted_demand = predicted_demand * 4924.1 + 13673.1
+                        predicted_supply = predicted_supply * 20667
+
                         timestamp = time.mktime(datetime.now().timetuple())
                         energy_rate = get_energy_rate(timestamp)
                         
