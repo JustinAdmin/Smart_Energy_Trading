@@ -27,6 +27,7 @@ try:
 except Exception as e:
     print(f"❌ Error loading preprocessed test data: {e}")
     exit(1)
+print(test_data.head())
 
 # Drop unneeded features to match the model's expected input
 columns_to_drop = [
@@ -38,6 +39,7 @@ test_data.drop(columns=columns_to_drop, inplace=True, errors='ignore')
 
 # Extract the required features for prediction
 X_test = test_data.copy()
+print(X_test.head())
 
 # Predict priority scores using the loaded model
 try:
