@@ -57,18 +57,12 @@ class DemandResponseAgent(Agent):
                     if data is None:
                         print("[DemandResponseAgent] No grid data received")
                     else:
-                        print(f"[DemandResponseAgent] Received grid data: {data}")
-                        test_sample_supply = np.array(data["test_sample_supply"]).reshape(1, -1, 1)
-                        test_sample_demand = np.array(data["test_sample_demand"]).reshape(1, -1, 1)
+                        print(f"[DemandResponseAgent] Received grid data")
+                        test_sample_supply = np.array(data["test_sample_supply"])
+                        test_sample_demand = np.array(data["test_sample_demand"])
 
-                        print(f"[DemandResponseAgent] Received test_sample_supply shape: {test_sample_supply.shape}")
-                        print(f"[DemandResponseAgent] Received test_sample_demand shape: {test_sample_demand.shape}")
-                        
                         predicted_demand = self.model_demand.predict(test_sample_demand)[0][0]
                         predicted_supply = self.model_supply.predict(test_sample_supply)[0][0]
-
-                        print(f"[DemandResponseAgent] Predicted Demand: {predicted_demand}")
-                        print(f"[DemandResponseAgent] Predicted Supply: {predicted_supply}")
                         
                         timestamp = time.mktime(datetime.now().timetuple())
                         energy_rate = get_energy_rate(timestamp)

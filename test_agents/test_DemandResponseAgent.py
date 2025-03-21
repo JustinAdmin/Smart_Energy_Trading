@@ -95,6 +95,7 @@ dataframe.columns = ["actual_demand",
 
 # Create column that represents the total supply of power
 dataframe['total_supply'] = dataframe.iloc[:, -6:].sum(axis=1)
+dataframe = dataframe.dropna()
 dataframe.head()
 dataframe.info()
 
@@ -222,7 +223,7 @@ print(f"Mean Absolute Error on Test Set: {mae}")
 
 # Make predictions
 predictions = supply_model.predict(X_test)
-
+print(predictions)
 # Simulate data like the original dataset
 np.random.seed(42)
 

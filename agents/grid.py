@@ -11,7 +11,7 @@ class Grid(Agent):
     class GridBehavior(CyclicBehaviour):
         async def on_start(self):
             self.grid_demand = 0
-            self.idx = 0
+            self.idx = 24
             project_dir = os.path.dirname(os.path.dirname(__file__))
             data_path_demand = os.path.join(project_dir,"models", "energy_X_test_demand_set.npz")
             data_path_supply = os.path.join(project_dir,"models", "energy_X_test_supply_set.npz")
@@ -29,15 +29,18 @@ class Grid(Agent):
             
             print(f"Before Reshaping - X_test_supply: {self.X_test_supply.shape}, X_test_demand: {self.X_test_demand.shape}")
             
-            test_sample_supply = self.X_test_supply[self.idx].reshape(1, self.X_test_supply.shape[1], self.X_test_supply.shape[2])
-            test_sample_demand = self.X_test_demand[self.idx].reshape(1, self.X_test_demand.shape[1], self.X_test_demand.shape[2])
+            test_sample_supply = self.X_test_supply[self.idx-24:self.idx]
+            test_sample_demand = self.X_test_demand[self.idx-24:self.idx]
             
             actual_supply = self.Y_test_supply[self.idx]
             actual_demand = self.Y_test_demand[self.idx]
             
-            print(f"After Reshaping - test_sample_supply: {test_sample_supply.shape}, test_sample_demand: {test_sample_demand.shape}")
+            # print(f"After Reshaping - test_sample_supply: {test_sample_supply.shape}, test_sample_demand: {test_sample_demand.shape}")
             
+            # Ensure index stays between 24 and the length of the array
             self.idx = (self.idx + 1) % len(self.X_test_supply)
+            if self.idx < 24:
+                self.idx = 24
             
             response = Message(to="facilitating@localhost")
             response.body = json.dumps({
