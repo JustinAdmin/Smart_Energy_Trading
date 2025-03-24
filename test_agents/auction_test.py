@@ -9,7 +9,7 @@ web3 = Web3(Web3.HTTPProvider("http://127.0.0.1:7545"))
 assert web3.is_connected(), "Failed to connect to the blockchain"
 
 # Update contract address each time you recompile and deploy
-contract_address = "0x1FE84D3EdB2983c40E05aBE6bd1Ed5a1d34e3723"
+contract_address = "0x1354E19699CD67Aa54E1383d79454fcae1C4C6Ad"
 
 # Ensure the contract is deployed
 code = web3.eth.get_code(contract_address)
