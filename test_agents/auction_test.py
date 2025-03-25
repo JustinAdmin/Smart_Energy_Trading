@@ -43,7 +43,7 @@ auction_contract = web3.eth.contract(address=contract_address, abi=contract_abi)
 
 # Define bidder accounts (from Ganache)
 accounts = web3.eth.accounts
-bidders = accounts[1:3]  # Assuming you have 4 bidders, adjust as needed
+bidders = accounts[1:5]  # Assuming you have 4 bidders, adjust as needed
 
 def ganache_client(method, params):
     return web3.provider.make_request(method, params)
@@ -55,13 +55,13 @@ def create_sealed_bid(value, nonce):
     return encoded
 
 def wait_until(end_datetime):
-    print(f'End Datetime {end_datetime}')
+    
     end_datetime = datetime.fromtimestamp(end_datetime)
-    print(f'End Datetime {end_datetime}')
+    
     diff = (end_datetime - datetime.now()).total_seconds()
     while diff > 1:
         diff = (end_datetime - datetime.now()).total_seconds()
-        print(diff)    # In case end_datetime was in past to begin with
+        print(f'Time Until End of Bid: {diff}')    # In case end_datetime was in past to begin with
         time.sleep(diff/2)
     time.sleep(2)
     return
@@ -84,8 +84,8 @@ def run_auction_round():
         print(f"Auction started with bidding duration {bidding_duration} and reveal duration {reveal_duration}!")
 
     # Step 2: Wait for the bidding phase to open
-    bidding_start = auction_contract.functions.getBiddingStart().call()
-    print(f"Bidding phase starts at block time: {bidding_start}")
+    bidding_start = auction_contract.functions.biddingStart().call()
+    print(f"Bidding phase starts at block time: {datetime.fromtimestamp(bidding_start)}")
     wait_until(bidding_start)
 
     # Step 3: Bidders place sealed bids
@@ -114,8 +114,8 @@ def run_auction_round():
     print("Bids submitted! Moving to reveal phase...")
 
     # Step 4: Wait for the reveal phase to open
-    reveal_start = auction_contract.functions.getRevealStart().call()
-    print(f"Reveal phase starts at block time: {reveal_start}")
+    reveal_start = auction_contract.functions.biddingEnd().call()
+    print(f"Reveal phase starts at block time: {datetime.fromtimestamp(reveal_start)}")
     wait_until(reveal_start)
     time.sleep(1)  # Additional delay to ensure all bids are submitted
 

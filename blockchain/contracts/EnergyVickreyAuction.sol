@@ -150,21 +150,4 @@ contract EnergyVickreyAuction {
 
         emit AuctionReset();
     }
-
-    // Get current block timestamp
-    function revealTimestamp() external view returns (uint256) {
-        return block.timestamp;
-    }
-
-    // Get bidding start time
-    function getBiddingStart() external view returns (uint256) {
-        require(biddingStart > 0, "Auction has not started yet");
-        return biddingStart;
-    }
-
-    // Get reveal start time
-    function getRevealStart() external view returns (uint256) {
-        require(biddingStart > 0, "Auction has not started yet");
-        return biddingEnd;
-    }
 }
