@@ -75,7 +75,7 @@ def run_auction_round():
     if auction_started == 0:
         bidding_duration = int(os.getenv("BIDDING_TIME")) 
         reveal_duration = int(os.getenv("REVEAL_TIME"))  
-        tx = auction_contract.functions.startAuction().transact({
+        tx = auction_contract.functions.startAuction(5).transact({
             'from': accounts[0],
             'gas': 3000000,
             'gasPrice': web3.to_wei('20', 'gwei')
@@ -144,7 +144,8 @@ def run_auction_round():
         winner = auction_contract.functions.highestBidder().call()
         final_price_wei = auction_contract.functions.secondHighestBid().call()
         final_price_eth = web3.from_wei(final_price_wei, "ether")
-        print(f"Auction Winner: {winner} with price: {final_price_eth} ETH")
+        energy = auction_contract.functions.energyAmount().call()
+        print(f"Auction Winner: {winner} \n Energy: {energy} kWh \n Price: {final_price_eth} ETH")
     except Exception as e:
         print(f"Failed to close auction: {e}")
 

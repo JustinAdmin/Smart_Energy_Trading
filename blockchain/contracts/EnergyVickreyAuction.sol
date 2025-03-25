@@ -23,6 +23,8 @@ contract EnergyVickreyAuction {
     uint256 public highestBid;
     uint256 public secondHighestBid;
 
+    uint256 public energyAmount;
+
     event BidPlaced(address indexed bidder, uint256 deposit);
     event BidRevealed(address indexed bidder, uint256 value);
     event AuctionEnded(address winner, uint256 winningBid);
@@ -55,11 +57,12 @@ contract EnergyVickreyAuction {
     }
 
     // Start the auction with correct timing logic
-    function startAuction() external onlySeller {
+    function startAuction(uint256 _value) external onlySeller {
         require(biddingStart == 0, "Auction has already started");
         biddingStart = block.timestamp;
         biddingEnd = biddingStart + biddingDuration;
         revealEnd = biddingEnd + revealDuration;
+        energyAmount = _value;
     }
 
     // Place bid
