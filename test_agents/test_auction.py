@@ -45,9 +45,6 @@ auction_contract = web3.eth.contract(address=contract_address, abi=contract_abi)
 accounts = web3.eth.accounts
 bidders = accounts[1:5]  # Assuming you have 4 bidders, adjust as needed
 
-def ganache_client(method, params):
-    return web3.provider.make_request(method, params)
-
 # Function to create a sealed bid hash
 def create_sealed_bid(value, nonce):
     # Change to match contract's keccak256(abi.encodePacked()) format
@@ -69,13 +66,15 @@ def wait_until(end_datetime):
 # Function to run a full auction round
 def run_auction_round():
     print("Running new auction round...")
-
+    bidders = accounts[1:5]
+    print(bidders)
     # Step 1: Start the auction (if not started)
     auction_started = auction_contract.functions.biddingStart().call()
+    energy_amount = 5
     if auction_started == 0:
         bidding_duration = int(os.getenv("BIDDING_TIME")) 
         reveal_duration = int(os.getenv("REVEAL_TIME"))  
-        tx = auction_contract.functions.startAuction(5).transact({
+        tx = auction_contract.functions.startAuction(energy_amount).transact({
             'from': accounts[0],
             'gas': 3000000,
             'gasPrice': web3.to_wei('20', 'gwei')
@@ -120,6 +119,14 @@ def run_auction_round():
     time.sleep(1)  # Additional delay to ensure all bids are submitted
 
     # Step 5: Reveal bids
+
+    bidders = auction_contract.functions.getBidders().call()
+    print(bidders)
+    bidders, deposits = auction_contract.functions.getBidDeposits().call()
+
+    for bidder, deposit in zip(bidders, deposits):
+        print(f"Bidder: {bidder}, Deposit: {deposit}")
+
     for i, bidder in enumerate(bidders):
         try:
             tx = auction_contract.functions.reveal(bid_values[i], nonces[i]).transact({
@@ -133,8 +140,8 @@ def run_auction_round():
 
     print("Bids revealed!")
 
-    # Step 6: Finalize the auction
-    print("Finalizing auction...")
+    # Step 6: Close the auction
+    print("Close auction...")
     try:
         tx = auction_contract.functions.closeAuction().transact({
             "from": accounts[0],
