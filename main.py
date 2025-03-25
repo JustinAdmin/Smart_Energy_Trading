@@ -1,6 +1,7 @@
 import subprocess
 import time
 import asyncio
+import os
 from agents.behavioralSegmentation import BehavioralSegmentationAgent
 from agents.demandResponse import DemandResponseAgent
 from agents.facilitating import FacilitatingAgent
@@ -22,6 +23,20 @@ def start_streamlit():
     streamlit_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'streamlit run streamlit_gui.py'"])
     print("✅ Streamlit UI started in a separate window!")
     return streamlit_process
+
+def start_ganache():
+    print("🟡 Starting Ganache CLI in a new PowerShell window...")
+    ganache_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'ganache-cli'"])
+    time.sleep(5)
+    print("✅ Ganache CLI started in a separate window!")
+    return ganache_process
+
+def deploy_smart_contract():
+    print("🟡 Deploying the smart contract...")
+    deployment_process = subprocess.Popen(["powershell", "-Command","Start-Process", "powershell","-ArgumentList 'cd blockchain; truffle migrate --reset'"],cwd=os.getcwd())
+    time.sleep(3)
+    print("✅ Smart contract deployed!")
+    return deployment_process
 
 async def main():
     print("🟡 Initializing agents...")
@@ -50,6 +65,8 @@ if __name__ == "__main__":
 
     spade_process = start_spade()     # Start SPADE server
     streamlit_process = start_streamlit()  # Start Streamlit UI
+    ganache_process = start_ganache()  # Start Ganache CLI
+    deployment_process = deploy_smart_contract()  # Deploy the smart contract
 
     print("🟡 Running Multi-Agent System...")
     try:
