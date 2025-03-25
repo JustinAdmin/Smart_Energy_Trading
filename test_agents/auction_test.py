@@ -3,7 +3,7 @@ import json
 import time
 import hashlib
 import os
-import datetime
+from datetime import datetime
 from dotenv import load_dotenv
 
 # Connect to local blockchain (Ganache)
@@ -43,52 +43,28 @@ auction_contract = web3.eth.contract(address=contract_address, abi=contract_abi)
 
 # Define bidder accounts (from Ganache)
 accounts = web3.eth.accounts
-bidders = accounts[1:5]  # Assuming you have 4 bidders, adjust as needed
+bidders = accounts[1:3]  # Assuming you have 4 bidders, adjust as needed
 
 def ganache_client(method, params):
     return web3.provider.make_request(method, params)
 
 # Function to create a sealed bid hash
 def create_sealed_bid(value, nonce):
-    bid_hash = hashlib.sha256(f"{value}{nonce}".encode()).hexdigest()
-    return "0x" + bid_hash  # Solidity expects a 0x-prefixed hex string
+    # Change to match contract's keccak256(abi.encodePacked()) format
+    encoded = Web3.solidity_keccak(['uint256', 'string'], [value, nonce])
+    return encoded
 
 def wait_until(end_datetime):
-    end_datetime = datetime.datetime.fromtimestamp(end_datetime)
-    while True:
+    print(f'End Datetime {end_datetime}')
+    end_datetime = datetime.fromtimestamp(end_datetime)
+    print(f'End Datetime {end_datetime}')
+    diff = (end_datetime - datetime.now()).total_seconds()
+    while diff > 1:
         diff = (end_datetime - datetime.now()).total_seconds()
-        if diff < 0: return       # In case end_datetime was in past to begin with
+        print(diff)    # In case end_datetime was in past to begin with
         time.sleep(diff/2)
-        if diff <= 0.1: return
-
-
-# Function to wait until a specific timestamp is reached with countdown
-#ef wait_until(timestamp, phase_name=""):
-#   # Set a reasonable timeout to avoid infinite loop
-#   max_iterations = int(os.getenv("REVEAL_TIME"))  # Max iterations before timeout (e.g., 5 minutes)
-#   iterations = 0
-#   current_time = web3.eth.get_block("latest")["timestamp"]  # Dynamically get current time
-#   print(f"Current time: {current_time}")
-#   remaining_time =  current_time-timestamp  # Calculate the remaining time
-#   remaining_time = abs(remaining_time)  # Ensure positive value   
-#   print(f"Remaining time: {remaining_time} seconds")
-#   while abs(remaining_time) > 0:
-# 
-#       # Print the countdown in seconds
-#       print(f"Time until {phase_name} starts: {remaining_time} seconds", end="\r")
-#       
-#       if iterations > max_iterations:  # If timeout exceeds, exit
-#           print("\nTimeout exceeded, exiting wait...")
-#           break
-#
-#       remaining_time -= 1  # Decrement the remaining time
-#
-#       time.sleep(1)  # Wait for 1 second before checking again
-#       iterations += 1
-
-# Function to wait until a specific timestamp is reached with countdown for reveal phase
-#def wait_until_reveal(timestamp):
-#    wait_until(timestamp, "Reveal")
+    time.sleep(2)
+    return
 
 # Function to run a full auction round
 def run_auction_round():
@@ -99,11 +75,12 @@ def run_auction_round():
     if auction_started == 0:
         bidding_duration = int(os.getenv("BIDDING_TIME")) 
         reveal_duration = int(os.getenv("REVEAL_TIME"))  
-        auction_contract.functions.startAuction().transact({
+        tx = auction_contract.functions.startAuction().transact({
             'from': accounts[0],
             'gas': 3000000,
             'gasPrice': web3.to_wei('20', 'gwei')
         })
+        web3.eth.wait_for_transaction_receipt(tx)
         print(f"Auction started with bidding duration {bidding_duration} and reveal duration {reveal_duration}!")
 
     # Step 2: Wait for the bidding phase to open
@@ -159,17 +136,17 @@ def run_auction_round():
     # Step 6: Finalize the auction
     print("Finalizing auction...")
     try:
-        tx5 = auction_contract.functions.finalizeAuction().transact({
-            "from": accounts[0],  # Auctioneer finalizes
+        tx = auction_contract.functions.closeAuction().transact({
+            "from": accounts[0],
             "gas": 3000000
         })
-        web3.eth.wait_for_transaction_receipt(tx5)
+        web3.eth.wait_for_transaction_receipt(tx)
         winner = auction_contract.functions.highestBidder().call()
         final_price_wei = auction_contract.functions.secondHighestBid().call()
         final_price_eth = web3.from_wei(final_price_wei, "ether")
         print(f"Auction Winner: {winner} with price: {final_price_eth} ETH")
     except Exception as e:
-        print(f"Failed to finalize auction: {e}")
+        print(f"Failed to close auction: {e}")
 
 def reset_auction():
     print("Resetting the auction for the next round...")
