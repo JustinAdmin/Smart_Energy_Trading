@@ -75,4 +75,6 @@ if __name__ == "__main__":
         print("🛑 Shutting down processes...")
         spade_process.terminate()
         streamlit_process.terminate()
+        ganache_process.terminate()
+        deployment_process.terminate()
         print("✅ Cleanup complete. Exiting.")
