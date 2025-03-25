@@ -7,7 +7,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 # Connect to local blockchain (Ganache)
-web3 = Web3(Web3.HTTPProvider("http://127.0.0.1:7545"))
+web3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
 assert web3.is_connected(), "Failed to connect to the blockchain"
 
 # Load environment variables from the .env file
