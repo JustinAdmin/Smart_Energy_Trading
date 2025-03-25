@@ -3,6 +3,7 @@ import json
 import time
 import hashlib
 import os
+import datetime
 from dotenv import load_dotenv
 
 # Connect to local blockchain (Ganache)
@@ -52,43 +53,42 @@ def create_sealed_bid(value, nonce):
     bid_hash = hashlib.sha256(f"{value}{nonce}".encode()).hexdigest()
     return "0x" + bid_hash  # Solidity expects a 0x-prefixed hex string
 
+def wait_until(end_datetime):
+    end_datetime = datetime.datetime.fromtimestamp(end_datetime)
+    while True:
+        diff = (end_datetime - datetime.now()).total_seconds()
+        if diff < 0: return       # In case end_datetime was in past to begin with
+        time.sleep(diff/2)
+        if diff <= 0.1: return
+
+
 # Function to wait until a specific timestamp is reached with countdown
-def wait_until(timestamp):
-    # Set a reasonable timeout to avoid infinite loop
-    max_iterations = int(os.getenv("BIDDING_TIME"))  # Max iterations before timeout (5 minutes)
-    iterations = 0
-    current_time = web3.eth.get_block("latest")["timestamp"]
-    while web3.eth.get_block("latest")["timestamp"] < timestamp:
-        remaining_time = timestamp - current_time
-        print(f"Time until bidding starts: {remaining_time} seconds", end="\r")
-
-        if iterations > max_iterations:
-            print("\nTimeout exceeded, exiting wait...")
-            break
-
-        time.sleep(1)  # Wait for 1 second before checking again
-        iterations += 1
-
-    print("\nBidding phase started!")
+#ef wait_until(timestamp, phase_name=""):
+#   # Set a reasonable timeout to avoid infinite loop
+#   max_iterations = int(os.getenv("REVEAL_TIME"))  # Max iterations before timeout (e.g., 5 minutes)
+#   iterations = 0
+#   current_time = web3.eth.get_block("latest")["timestamp"]  # Dynamically get current time
+#   print(f"Current time: {current_time}")
+#   remaining_time =  current_time-timestamp  # Calculate the remaining time
+#   remaining_time = abs(remaining_time)  # Ensure positive value   
+#   print(f"Remaining time: {remaining_time} seconds")
+#   while abs(remaining_time) > 0:
+# 
+#       # Print the countdown in seconds
+#       print(f"Time until {phase_name} starts: {remaining_time} seconds", end="\r")
+#       
+#       if iterations > max_iterations:  # If timeout exceeds, exit
+#           print("\nTimeout exceeded, exiting wait...")
+#           break
+#
+#       remaining_time -= 1  # Decrement the remaining time
+#
+#       time.sleep(1)  # Wait for 1 second before checking again
+#       iterations += 1
 
 # Function to wait until a specific timestamp is reached with countdown for reveal phase
-def wait_until_reveal(timestamp):
-    # Set a reasonable timeout to avoid infinite loop
-    max_iterations = int(os.getenv("BIDDING_TIME"))   # Max iterations before timeout (5 minutes)
-    iterations = 0
-    current_time = web3.eth.get_block("latest")["timestamp"]
-    while web3.eth.get_block("latest")["timestamp"] < timestamp:
-        remaining_time = timestamp - current_time
-        print(f"Time until reveal phase starts: {remaining_time} seconds", end="\r")
-
-        if iterations > max_iterations:
-            print("\nTimeout exceeded, exiting wait...")
-            break
-
-        time.sleep(1)  # Wait for 1 second before checking again
-        iterations += 1
-
-    print("\nReveal phase started!")
+#def wait_until_reveal(timestamp):
+#    wait_until(timestamp, "Reveal")
 
 # Function to run a full auction round
 def run_auction_round():
@@ -97,8 +97,8 @@ def run_auction_round():
     # Step 1: Start the auction (if not started)
     auction_started = auction_contract.functions.biddingStart().call()
     if auction_started == 0:
-        bidding_duration = int(os.getenv("BIDDING_TIME"))  # Default to 30 seconds
-        reveal_duration = int(os.getenv("REVEAL_TIME"))  # Default to 10 seconds
+        bidding_duration = int(os.getenv("BIDDING_TIME")) 
+        reveal_duration = int(os.getenv("REVEAL_TIME"))  
         auction_contract.functions.startAuction().transact({
             'from': accounts[0],
             'gas': 3000000,
@@ -127,20 +127,20 @@ def run_auction_round():
                 "gas": 3000000
             })
             web3.eth.wait_for_transaction_receipt(tx)
-            print(f"Bid placed by {bidder}!")
+            print(f"Bid placed by {bidder}")
         except Exception as e:
             print(f"Failed to place bid for {bidder}: {e}")
 
         # Delay between bids
         time.sleep(bid_delay)
 
-    print("Bids submitted! moving to reveal phase...")
+    print("Bids submitted! Moving to reveal phase...")
 
     # Step 4: Wait for the reveal phase to open
     reveal_start = auction_contract.functions.getRevealStart().call()
     print(f"Reveal phase starts at block time: {reveal_start}")
-    time.sleep(1)  # Delay before reveal phase starts
-    wait_until_reveal(reveal_start)
+    wait_until(reveal_start)
+    time.sleep(1)  # Additional delay to ensure all bids are submitted
 
     # Step 5: Reveal bids
     for i, bidder in enumerate(bidders):

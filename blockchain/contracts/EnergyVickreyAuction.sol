@@ -43,6 +43,11 @@ contract EnergyVickreyAuction {
         _;
     }
 
+    modifier onlySeller() {
+        require(msg.sender == seller, "Only the seller can perform this action");
+        _;
+    }
+
     constructor(uint256 _biddingDuration, uint256 _revealDuration) {
         seller = msg.sender;
         biddingDuration = _biddingDuration;
@@ -50,7 +55,7 @@ contract EnergyVickreyAuction {
     }
 
     // Start the auction with correct timing logic
-    function startAuction() external {
+    function startAuction() external onlySeller {
         require(biddingStart == 0, "Auction has already started");
         biddingStart = block.timestamp;
         biddingEnd = biddingStart + biddingDuration;
@@ -97,10 +102,13 @@ contract EnergyVickreyAuction {
         emit BidRevealed(msg.sender, _value);
     }
 
-    // Finalize auction
-    function finalizeAuction() external onlyAfter(revealEnd) auctionNotEnded {
+    // Finalize auction (manual close by auctioneer)
+    function closeAuction() external onlySeller auctionNotEnded {
+        require(block.timestamp >= biddingEnd, "Bidding phase is not over");
+
         ended = true;
 
+        // Finalize the auction by transferring funds
         if (highestBidder != address(0)) {
             payable(seller).transfer(secondHighestBid);
             payable(highestBidder).transfer(
@@ -108,6 +116,7 @@ contract EnergyVickreyAuction {
             );
         }
 
+        // Refund non-winners
         for (uint256 i = 0; i < bidders.length; i++) {
             address bidder = bidders[i];
             if (bidder != highestBidder) {
@@ -123,7 +132,7 @@ contract EnergyVickreyAuction {
     }
 
     // Reset auction
-    function resetAuction(uint256 _biddingDuration, uint256 _revealDuration) external {
+    function resetAuction(uint256 _biddingDuration, uint256 _revealDuration) external onlySeller {
         require(ended, "Auction must be ended before resetting");
 
         biddingStart = 0;
