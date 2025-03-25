@@ -1,5 +1,6 @@
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
+from spade.message import Message
 import json
 import sqlite3
 import time
@@ -56,7 +57,14 @@ class GUIAgent(Agent):
                 except Exception as e:
                     print(f"[GUI] Error: {e}")
                     print(f"[GUI] {msg}")
+            response = Message(to="facilitating@localhost")
+            response.body = json.dumps({
+                "strategy": "neutral"
+            })
 
+            await self.send(response)
+            print(f"[GUI] Sent trading strategy to FacilitatingAgent: {response.body}")
+            
     async def setup(self):
         print("[GUI] Started")
         self.add_behaviour(self.guiBehaviour())  # Correctly starts the cyclic behavior

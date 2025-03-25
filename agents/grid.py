@@ -27,15 +27,11 @@ class Grid(Agent):
             print("[Grid] Sending Grid Demand and Supply Data")
             msg = await self.receive(timeout=5)
             
-            print(f"Before Reshaping - X_test_supply: {self.X_test_supply.shape}, X_test_demand: {self.X_test_demand.shape}")
-            
             test_sample_supply = self.X_test_supply[self.idx-24:self.idx]
             test_sample_demand = self.X_test_demand[self.idx-24:self.idx]
             
             actual_supply = self.Y_test_supply[self.idx]
             actual_demand = self.Y_test_demand[self.idx]
-            
-            # print(f"After Reshaping - test_sample_supply: {test_sample_supply.shape}, test_sample_demand: {test_sample_demand.shape}")
             
             # Ensure index stays between 24 and the length of the array
             self.idx = (self.idx + 1) % len(self.X_test_supply)
@@ -49,19 +45,6 @@ class Grid(Agent):
                 "test_sample_supply": test_sample_supply.tolist(),
                 "test_sample_demand": test_sample_demand.tolist()
             })
-
-   
-        # async def run(self):
-        #     await asyncio.sleep(5)
-        #     msg = await self.receive(timeout=5)
-        #     print("[Grid] Sending Grid Data")
-        #     response = Message(to="facilitating@localhost")
-        #     grid_demand = np.sin(self.grid_demand) * 20
-        #     self.grid_demand += 0.1
-        #     response.body = json.dumps({
-        #         "grid_demand":grid_demand,
-        #         "household_power":100
-        #         })
             
             await self.send(response)
             print("[Grid] Sent grid demand data to FacilitatingAgent")

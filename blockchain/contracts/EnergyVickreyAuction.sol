@@ -56,6 +56,22 @@ contract EnergyVickreyAuction {
         revealDuration = _revealDuration;
     }
 
+    function getBidders() external view returns (address[] memory) {
+        return bidders;
+    }
+
+    function getBidDeposits() external view returns (address[] memory, uint256[] memory) {
+        uint256 length = bidders.length;
+        uint256[] memory deposits = new uint256[](length);
+
+        for (uint256 i = 0; i < length; i++) {
+            deposits[i] = bids[bidders[i]].deposit;
+        }
+
+        return (bidders, deposits);
+    }
+
+
     // Start the auction with correct timing logic
     function startAuction(uint256 _value) external onlySeller {
         require(biddingStart == 0, "Auction has already started");
