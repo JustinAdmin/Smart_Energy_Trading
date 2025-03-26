@@ -75,7 +75,7 @@ class NegotiationAgent(Agent):
             diff = (end_datetime - datetime.now()).total_seconds()
             while diff > 1:
                 diff = (end_datetime - datetime.now()).total_seconds()
-                print(f'[NegotiationAgent] Time Until End of Bid: {diff}')    # In case end_datetime was in past to begin with
+                print(f'[NegotiationAgent] Time Until End of Bid: {diff}')
                 asyncio.sleep(diff/2)
             asyncio.sleep(2)
             return
@@ -125,7 +125,7 @@ class NegotiationAgent(Agent):
             print("[NegotiationAgent] Bid revealed!")
 
         async def close(self):
-            # Step 6: Close the auction
+            # Close the auction
             print("[NegotiationAgent] Close auction...")
             try:
                 tx = self.auction_contract.functions.closeAuction().transact({
@@ -140,6 +140,32 @@ class NegotiationAgent(Agent):
                 print(f"[NegotiationAgent] Auction Winner: {winner} \n[NegotiationAgent] Energy: {energy} kWh \n[NegotiationAgent] Price: {final_price_eth} ETH")
             except Exception as e:
                 print(f"[NegotiationAgent] Failed to close auction: {e}")
+
+        async def current_auction_state(bidding_start, bidding_end, reveal_end):
+            current_time = datetime.now().timestamp()
+
+            
+            if bidding_start == 0:
+                print("[NegotiationAgent] No auctions being held")
+                return -1
+            elif current_time < bidding_start:
+                print("[NegotiationAgent] Bidding has not yet started")
+                print(f"[NegotiationAgent] Current Time: {datetime.datetime.fromtimestamp(current_time)}, Bidding Start: {datetime.datetime.fromtimestamp(bidding_start)}")
+                return 0
+            elif current_time <= bidding_end:
+                print("[NegotiationAgent] Currently in the bidding phase")
+                print(f"[NegotiationAgent] Current Time: {datetime.datetime.fromtimestamp(current_time)}, Bidding Start: {datetime.datetime.fromtimestamp(bidding_end)}")
+                return 1
+            elif current_time <= reveal_end:
+                print("[NegotiationAgent] Currently in the reveal phase")
+                print(f"[NegotiationAgent] Current Time: {datetime.datetime.fromtimestamp(current_time)}, Bidding Start: {datetime.datetime.fromtimestamp(reveal_end)}")
+                return 2
+            else:
+                print("[NegotiationAgent] Auction in process of being closed")
+                print(f"[NegotiationAgent] Current Time: {datetime.datetime.fromtimestamp(current_time)}, Bidding Start: {datetime.datetime.fromtimestamp(bidding_start)}, Reveal End: {datetime.datetime.fromtimestamp(reveal_end)}")
+                return 3
+                    
+
 
         async def run(self):
             print("[NegotiationAgent] Waiting for surplus energy data...")
@@ -157,12 +183,18 @@ class NegotiationAgent(Agent):
                         print(f"[NegotiationAgent] Missing data: {data}")
                     
                     else:
+                        print("[NegotiationAgent] Received data")
 
                         energy_delta = house_data.get("current_production") - house_data.get("current_demand")
-                        
+                        print(f"[NegotiationAgent] Calculated Energy Delta: {energy_delta}")
+
+
                         if energy_delta < 0:
                             # Get the timing variables
                             bidding_start, bidding_end, reveal_end = await self.get_auction_timings()
+                            await self.current_auction_state(bidding_start, bidding_end, reveal_end)
+
+                            # Wait for a new bidding session to start
                             while bidding_start < datetime.now().timestamp():
                                 # Get the timing variables
                                 bidding_start, bidding_end, reveal_end = await self.get_auction_timings()
@@ -184,6 +216,8 @@ class NegotiationAgent(Agent):
                                 case "conservative":
                                     # Buy at 85% market
                                     await self.bid(market * 0.85)
+                                case _:
+                                    raise Exception(f"Invalid Strategy: {strategy}")
                             
                             await self.wait_until(bidding_end)
 
@@ -191,6 +225,11 @@ class NegotiationAgent(Agent):
                         else:
                             # We are energy neutral or in a surplus and want to store/sell
                             
+                            bidding_start, bidding_end, reveal_end = await self.get_auction_timings()
+                            await self.current_auction_state(bidding_start, bidding_end, reveal_end)
+                            
+                            await self.wait_until(reveal_end)
+
                             match strategy:
                                 case "aggressive":
                                     # 25 conserve / 75 sell
@@ -201,6 +240,8 @@ class NegotiationAgent(Agent):
                                 case "conservative":
                                     # 75 conserve / 25 sell
                                     await self.start_auction(energy_delta * 0.75)
+                                case _:
+                                    raise Exception(f"Invalid Strategy: {strategy}")
                             
                             # Get the timing variables
                             bidding_start, bidding_end, reveal_end = await self.get_auction_timings()

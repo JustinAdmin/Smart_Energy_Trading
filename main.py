@@ -27,7 +27,7 @@ def start_streamlit():
 
 def start_ganache():
     print("🟡 Starting Ganache CLI in a new PowerShell window...")
-    ganache_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'ganache-cli'"])
+    ganache_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'ganache-cli --networkId 5777'"])
     time.sleep(2)
     print("✅ Ganache CLI started in a separate window!")
     return ganache_process
@@ -39,11 +39,18 @@ def deploy_smart_contract():
     # Update the Popen command to use the 'development' network defined in truffle-config.js
     deployment_process = subprocess.Popen(["powershell", "-Command",
                                            "Start-Process", "powershell",
-                                           "-ArgumentList 'cd blockchain; truffle migrate --network development'"],
+                                           "-ArgumentList 'cd blockchain; fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression; truffle migrate --network development --reset; Pause'"],
                                            cwd=os.getcwd())
-    time.sleep(2)  # Allow time for the process to start
+    time.sleep(10)  # Allow time for the process to start
     print("✅ Smart contract deployed!")
     return deployment_process
+
+def start_smart_grid():
+    print("🟡 Starting SPADE server in a new PowerShell window...")
+    spade_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'python smart_grid.py'"])
+    time.sleep(2)
+    print("✅ Smart-Grid started in a separate window!")
+    return spade_process
 
 async def main():
     print("🟡 Initializing agents...")
@@ -74,6 +81,7 @@ if __name__ == "__main__":
     streamlit_process = start_streamlit()  # Start Streamlit UI
     ganache_process = start_ganache()  # Start Ganache CLI
     deployment_process = deploy_smart_contract()  # Deploy the smart contract
+    smart_grid_process = start_smart_grid() # Simulate neighbours on the Smart-Grid
 
     print("🟡 Running Multi-Agent System...")
     try:
