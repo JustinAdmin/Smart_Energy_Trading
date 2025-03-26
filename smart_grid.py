@@ -5,7 +5,7 @@ import hashlib
 import os
 from datetime import datetime
 from dotenv import load_dotenv
-from math import sin, pi
+from math import sin
 
 # Load contract address dynamically
 project_dir = os.path.dirname(os.path.dirname(__file__))  # Correct path logic
@@ -17,7 +17,7 @@ load_dotenv(env_path)  # Ensure .env is loaded from the correct location
 # Function to create a sealed bid hash
 def create_sealed_bid(value, nonce):
     # Change to match contract's keccak256(abi.encodePacked()) format
-    encoded = Web3.solidity_keccak(['uint256', 'string'], [value, nonce])
+    encoded = Web3.solidity_keccak(['uint256', 'string'], [int(value), str(nonce)])
     return encoded
 
 def start_auction(auctioneer, auction_contract, web3, energy_amount=5):
@@ -50,7 +50,7 @@ def wait_until(end_timestamp):
     while diff > 1:
         
         diff = (end_datetime - datetime.now()).total_seconds()
-        print(f'Time Until End of Bid: {diff}')
+        print(f'Time Until Continue: {diff}')
         time.sleep(diff / 2)
 
 def wait_until_timeout(end_timestamp, auction_contract):
@@ -114,37 +114,39 @@ def run_auction_round(bidders, auction_contract, auctioneer, web3, auction_holde
     reveal_start = auction_contract.functions.biddingEnd().call()
     print(f"Reveal phase starts at block time: {datetime.fromtimestamp(reveal_start)}")
     wait_until(reveal_start)
-    time.sleep(1)  # Additional delay to ensure all bids are submitted
-
-    # Step 5: Reveal bids
-    for bidder, deposit in zip(bidders, bid_values):
-        print(f"Bidder: {bidder}, Deposit: {deposit}")
-
+    time.sleep(4)  # Additional delay to ensure all bids are submitted
+    
     for i, bidder in enumerate(bidders):
         try:
             tx = auction_contract.functions.reveal(bid_values[i], nonces[i]).transact({
                 'from': bidder,
                 "gas": 3000000
             })
-            web3.eth.wait_for_transaction_receipt(tx)
+            receipt = web3.eth.wait_for_transaction_receipt(tx)
             print(f"Bid revealed by {bidder}!")
         except Exception as e:
             print(f"Failed to reveal bid for {bidder}: {e}")
-
+    
+    # Calculate winner to display locally
+    winner = auction_contract.functions.highestBidder().call()
+    final_price_wei = auction_contract.functions.secondHighestBid().call()
+    final_price_eth = web3.from_wei(final_price_wei, "ether")
+    energy = auction_contract.functions.energyAmount().call()
     print("Bids revealed!")
 
     # Step 6: Close the auction
     print("Close auction...")
     try:
+        reveal_end = auction_contract.functions.revealEnd().call()
+        print(f"Reveal ends at block time: {datetime.fromtimestamp(reveal_end)}")
+        wait_until(reveal_end)
+        time.sleep(1)  # Additional delay to ensure all bids are submitted
         tx = auction_contract.functions.closeAuction().transact({
             "from": auctioneer,
             "gas": 3000000
         })
         web3.eth.wait_for_transaction_receipt(tx)
-        winner = auction_contract.functions.highestBidder().call()
-        final_price_wei = auction_contract.functions.secondHighestBid().call()
-        final_price_eth = web3.from_wei(final_price_wei, "ether")
-        energy = auction_contract.functions.energyAmount().call()
+        
         print(f"Auction Winner: {winner} \n Energy: {energy} kWh \n Price: {final_price_eth} ETH")
     except Exception as e:
         print(f"Failed to close auction: {e}")

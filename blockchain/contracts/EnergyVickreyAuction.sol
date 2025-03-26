@@ -29,6 +29,13 @@ contract EnergyVickreyAuction {
     event BidRevealed(address indexed bidder, uint256 value);
     event AuctionEnded(address winner, uint256 winningBid);
     event AuctionReset();
+    event RevealDebug(
+        address bidder,
+        bytes32 providedHash,
+        bytes32 computedHash,
+        uint256 value,
+        string nonce
+    );
 
     modifier onlyBefore(uint256 _time) {
         require(block.timestamp < _time, "Too late");
@@ -61,10 +68,13 @@ contract EnergyVickreyAuction {
     }
 
     function getBidDeposits() external view returns (address[] memory, uint256[] memory) {
-        uint256 length = bidders.length;
-        uint256[] memory deposits = new uint256[](length);
+        if (bidders.length == 0) {
+            return (new address[](0), new uint256[](0));  // Fixed empty array initialization
+        }
 
-        for (uint256 i = 0; i < length; i++) {
+        uint256[] memory deposits = new uint256[](bidders.length);
+
+        for (uint256 i = 0; i < bidders.length; i++) {
             deposits[i] = bids[bidders[i]].deposit;
         }
 
@@ -105,17 +115,30 @@ contract EnergyVickreyAuction {
         Bid storage bidToCheck = bids[msg.sender];
         require(bidToCheck.sealedBid != bytes32(0), "No bid found");
 
+        // Compute hash the same way as in the bid
+        bytes32 computedHash = keccak256(abi.encodePacked(_value, _nonce));
+        
+        // Emit debug event
+        emit RevealDebug(
+            msg.sender,
+            bidToCheck.sealedBid,
+            computedHash,
+            _value,
+            _nonce
+        );
+
         require(
-            bidToCheck.sealedBid == keccak256(abi.encodePacked(_value, _nonce)),
+            bidToCheck.sealedBid == computedHash,
             "Invalid bid reveal"
         );
         require(bidToCheck.deposit >= _value, "Deposit too low");
 
+        // Update highest and second highest bids
         if (_value > highestBid) {
             secondHighestBid = highestBid;
             highestBid = _value;
             highestBidder = msg.sender;
-        } else if (_value > secondHighestBid) {
+        } else if (_value > secondHighestBid && msg.sender != highestBidder) {
             secondHighestBid = _value;
         }
 

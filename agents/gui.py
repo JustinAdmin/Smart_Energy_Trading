@@ -59,7 +59,7 @@ class GUIAgent(Agent):
                     print(f"[GUI] {msg}")
             response = Message(to="facilitating@localhost")
             response.body = json.dumps({
-                "strategy": "neutral"
+                "strategy": "aggressive"
             })
 
             await self.send(response)

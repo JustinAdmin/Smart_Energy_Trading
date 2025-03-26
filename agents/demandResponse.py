@@ -68,7 +68,7 @@ class DemandResponseAgent(Agent):
                         predicted_supply = predicted_supply * 20667
 
                         timestamp = time.mktime(datetime.now().timetuple())
-                        energy_rate = get_energy_rate(timestamp)
+                        energy_rate = get_energy_rate(timestamp) * 10
                         
                         curtailment = 0
                         if predicted_demand > predicted_supply:
