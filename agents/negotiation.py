@@ -13,7 +13,7 @@ class NegotiationAgent(Agent):
     class TradingBehaviour(CyclicBehaviour):
         async def on_start(self):
             # Connect to local blockchain (Ganache)
-            self.web3 = Web3(Web3.HTTPProvider("http://127.0.0.1:7545"))
+            self.web3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
             assert self.web3.is_connected(), "Failed to connect to the blockchain"
 
             # Load environment variables from the .env file

@@ -27,7 +27,7 @@ def start_streamlit():
 
 def start_ganache():
     print("🟡 Starting Ganache CLI in a new PowerShell window...")
-    ganache_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'ganache-cli --networkId 4447'"])
+    ganache_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'ganache-cli'"])
     time.sleep(2)
     print("✅ Ganache CLI started in a separate window!")
     return ganache_process
@@ -39,7 +39,7 @@ def deploy_smart_contract():
     # Update the Popen command to use the 'development' network defined in truffle-config.js
     deployment_process = subprocess.Popen(["powershell", "-Command",
                                            "Start-Process", "powershell",
-                                           "-ArgumentList 'truffle migrate --network development'"],
+                                           "-ArgumentList 'cd blockchain; truffle migrate --network development'"],
                                            cwd=os.getcwd())
     time.sleep(2)  # Allow time for the process to start
     print("✅ Smart contract deployed!")
