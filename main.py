@@ -41,7 +41,7 @@ def deploy_smart_contract():
                                            "Start-Process", "powershell",
                                            "-ArgumentList 'cd blockchain; fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression; truffle migrate --network development --reset; Pause'"],
                                            cwd=os.getcwd())
-    time.sleep(10)  # Allow time for the process to start
+    time.sleep(15)  # Allow time for the process to start
     print("✅ Smart contract deployed!")
     return deployment_process
 

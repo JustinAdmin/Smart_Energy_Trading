@@ -221,24 +221,25 @@ def main():
 
     while True:  # Run continuous rounds
         
-        energy_amount = A * sin(x) + D
-        x += 0.1
+        try:
+            energy_amount = A * sin(x) + D
+            x += 0.1
 
-        # Run auction round
-        run_auction_round(auction_holder, energy_amount)
-        
-        # Flip the status of auction holder and await the next auction.
-        auction_holder = not auction_holder
+            # Run auction round
+            run_auction_round(auction_holder, energy_amount)
+            
+            # Flip the status of auction holder and await the next auction.
+            auction_holder = not auction_holder
 
-        # Call the reset auction function
-        reset_auction()
+            # Call the reset auction function
+            reset_auction()
 
-        counter += 1
-        print(f"Completed {counter} auction rounds.")
-
-        # Wait for the next auction to start
-        print("Waiting for the next auction round...")
-        time.sleep(2)  # Adjust this to the amount of time until the next auction should start
+            # Wait for the next auction to start
+            print("Waiting for the next auction round...")
+            time.sleep(2)  # Adjust this to the amount of time until the next auction should start
+        except Exception as e:
+            print(e)
+            input("Press Enter to Exit...")
 
 # Start the main loop
 main()

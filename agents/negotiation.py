@@ -68,15 +68,16 @@ class NegotiationAgent(Agent):
             reveal_end = self.auction_contract.functions.revealEnd().call()
             return bidding_start, reveal_start, reveal_end
         
-        async def wait_until(end_datetime):
+        async def wait_until(self, end_datetime):
     
             end_datetime = datetime.fromtimestamp(end_datetime)
             
             diff = (end_datetime - datetime.now()).total_seconds()
+            print(f"[NegotiationAgent] Wait time: {diff}")
             while diff > 1:
                 diff = (end_datetime - datetime.now()).total_seconds()
-                print(f'[NegotiationAgent] Time Until End of Bid: {diff}')
                 asyncio.sleep(diff/2)
+            print("[NegotiationAgent] Wait over...")
             asyncio.sleep(2)
             return
         
@@ -141,7 +142,7 @@ class NegotiationAgent(Agent):
             except Exception as e:
                 print(f"[NegotiationAgent] Failed to close auction: {e}")
 
-        async def current_auction_state(bidding_start, bidding_end, reveal_end):
+        async def current_auction_state(self, bidding_start, bidding_end, reveal_end):
             current_time = datetime.now().timestamp()
 
             
@@ -192,12 +193,10 @@ class NegotiationAgent(Agent):
                         if energy_delta < 0:
                             # Get the timing variables
                             bidding_start, bidding_end, reveal_end = await self.get_auction_timings()
+                            print(bidding_start)
+                            print(bidding_end)
+                            print(reveal_end)
                             await self.current_auction_state(bidding_start, bidding_end, reveal_end)
-
-                            # Wait for a new bidding session to start
-                            while bidding_start < datetime.now().timestamp():
-                                # Get the timing variables
-                                bidding_start, bidding_end, reveal_end = await self.get_auction_timings()
 
                             # We are in an energy deficit and need to purchase energy
                             strategy = gui_data.get("strategy")
@@ -209,13 +208,13 @@ class NegotiationAgent(Agent):
                             match strategy:
                                 case "aggressive":
                                     # Buy at 102% market
-                                    await self.bid(market * 1.02)
+                                    await self.bid(self.web3.to_wei(market * 1.02, "ether"))
                                 case "neutral":
                                     # Buy at 95% market
-                                    await self.bid(market * 0.95)
+                                    await self.bid(self.web3.to_wei(market * 0.95, "ether"))
                                 case "conservative":
                                     # Buy at 85% market
-                                    await self.bid(market * 0.85)
+                                    await self.bid(self.web3.to_wei(market * 0.85, "ether"))
                                 case _:
                                     raise Exception(f"Invalid Strategy: {strategy}")
                             
@@ -233,13 +232,13 @@ class NegotiationAgent(Agent):
                             match strategy:
                                 case "aggressive":
                                     # 25 conserve / 75 sell
-                                    await self.start_auction(energy_delta * 0.75)
+                                    await self.start_auction(self.web3.to_wei(energy_delta * 0.75, "ether"))
                                 case "neutral":
                                     # 50 conserve / 50 sell
-                                    await self.start_auction(energy_delta * 0.75)
+                                    await self.start_auction(self.web3.to_wei(energy_delta * 0.50, "ether"))
                                 case "conservative":
                                     # 75 conserve / 25 sell
-                                    await self.start_auction(energy_delta * 0.75)
+                                    await self.start_auction(self.web3.to_wei(energy_delta * 0.25, "ether"))
                                 case _:
                                     raise Exception(f"Invalid Strategy: {strategy}")
                             

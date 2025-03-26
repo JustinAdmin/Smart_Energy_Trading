@@ -3,7 +3,7 @@ const path = require('path');
 const EnergyVickreyAuction = artifacts.require("EnergyVickreyAuction");
 
 module.exports = async function (deployer) {
-    const biddingTime = 15;  // Time in seconds (30 seconds in this case)
+    const biddingTime = 20;  // Time in seconds (30 seconds in this case)
     const revealTime = 5;   // Time in seconds (20 seconds in this case)
     const nextRoundDelay = 2; // Time in seconds for the next auction round delay
 
