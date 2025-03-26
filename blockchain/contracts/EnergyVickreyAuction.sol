@@ -73,12 +73,13 @@ contract EnergyVickreyAuction {
 
 
     // Start the auction with correct timing logic
-    function startAuction(uint256 _value) external onlySeller {
+    function startAuction(uint256 _value) external {
         require(biddingStart == 0, "Auction has already started");
         biddingStart = block.timestamp;
         biddingEnd = biddingStart + biddingDuration;
         revealEnd = biddingEnd + revealDuration;
         energyAmount = _value;
+        seller = msg.sender;
     }
 
     // Place bid

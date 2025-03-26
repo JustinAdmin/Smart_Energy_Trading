@@ -7,13 +7,6 @@ from datetime import datetime
 from dotenv import load_dotenv
 from math import sin, pi
 
-# Connect to local blockchain (Ganache)
-web3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
-assert web3.is_connected(), "Failed to connect to the blockchain"
-
-# Load environment variables from the .env file
-load_dotenv()
-
 # Load contract address dynamically
 project_dir = os.path.dirname(os.path.dirname(__file__))  # Correct path logic
 print(project_dir)
@@ -21,40 +14,13 @@ env_path = os.path.join(project_dir, "5014-Project", "blockchain", ".env")
 print(env_path)
 load_dotenv(env_path)  # Ensure .env is loaded from the correct location
 
-contract_address = os.getenv("CONTRACT_ADDRESS")
-assert contract_address, "Contract address not found in .env file."
-
-# Ensure the contract is deployed
-code = web3.eth.get_code(contract_address)
-assert code != b'0x', "Contract address is invalid or the contract is not deployed."
-
-# Load the contract ABI dynamically
-contract_path = os.path.join(project_dir, "5014-Project", "blockchain", "build", "contracts", "EnergyVickreyAuction.json")
-print(contract_path)
-with open(contract_path, "r") as abi_file:
-    contract_data = json.load(abi_file)
-
-# Validate ABI structure
-if 'abi' not in contract_data or not isinstance(contract_data['abi'], list):
-    raise ValueError("ABI is missing or invalid in the contract JSON file.")
-
-contract_abi = contract_data['abi']
-print(f"Ganache connected: {web3.is_connected()}")
-
-# Initialize the contract
-auction_contract = web3.eth.contract(address=contract_address, abi=contract_abi)
-
-# Define bidder accounts (from Ganache)
-accounts = web3.eth.accounts
-bidders = accounts[2:6]  # Assuming you have 4 bidders, adjust as needed
-
 # Function to create a sealed bid hash
 def create_sealed_bid(value, nonce):
     # Change to match contract's keccak256(abi.encodePacked()) format
     encoded = Web3.solidity_keccak(['uint256', 'string'], [value, nonce])
     return encoded
 
-def start_auction(energy_amount=5):
+def start_auction(auctioneer, auction_contract, web3, energy_amount=5):
     # Wait for the last auction to end and then start a new one
     try: 
         auction_started = auction_contract.functions.biddingStart().call()
@@ -69,7 +35,7 @@ def start_auction(energy_amount=5):
     bidding_duration = int(os.getenv("BIDDING_TIME")) 
     reveal_duration = int(os.getenv("REVEAL_TIME"))  
     tx = auction_contract.functions.startAuction(int(energy_amount)).transact({
-        'from': bidders[1],
+        'from': auctioneer,
         'gas': 3000000,
         'gasPrice': web3.to_wei('20', 'gwei')
     })
@@ -78,37 +44,46 @@ def start_auction(energy_amount=5):
 
 def wait_until(end_timestamp):
     end_datetime = datetime.fromtimestamp(end_timestamp)
-    start_time = time.time()  # Record the start time
     
     diff = (end_datetime - datetime.now()).total_seconds()
-    
+    print(f"Wait time of: {diff}")
     while diff > 1:
-        # Check if we've exceeded 20 seconds
-        if time.time() - start_time > 20:
-            print("Timeout reached. Exiting wait loop and starting auction")
-            start_auction(5)
-            break
         
         diff = (end_datetime - datetime.now()).total_seconds()
         print(f'Time Until End of Bid: {diff}')
         time.sleep(diff / 2)
+
+def wait_until_timeout(end_timestamp, auction_contract):
+    countdown = 3
+    while countdown > 0 and end_timestamp == 0:
+        print(f"Countdown: {countdown}")
+        if end_timestamp == 0:
+            time.sleep(3)
+            end_timestamp = auction_contract.functions.biddingStart().call()
+        countdown -= 1
+
+    if countdown == end_timestamp:
+        return True
+
+    wait_until(end_timestamp)
+    
+    return False
     
 
 # Function to run a full auction round
-def run_auction_round(auction_holder=True, energy_amount=5):
+def run_auction_round(bidders, auction_contract, auctioneer, web3, auction_holder=True, energy_amount=5):
     print("Running new auction round...")
-    bidders = accounts[2:6]
 
     if auction_holder:
         # Start the auction (if not started)
-        start_auction(energy_amount)
-    
-
+        start_auction(auctioneer, auction_contract, web3, energy_amount)
 
     # Step 2: Wait for the bidding phase to open
     bidding_start = auction_contract.functions.biddingStart().call()
+    flag = wait_until_timeout(bidding_start, auction_contract)
+    if flag:
+        start_auction(auctioneer, auction_contract, web3, energy_amount)
     print(f"Bidding phase starts at block time: {datetime.fromtimestamp(bidding_start)}")
-    wait_until(bidding_start)
 
     # Step 3: Bidders place sealed bids
     bid_values = [web3.to_wei(0.1, "ether"), web3.to_wei(0.2, "ether"), web3.to_wei(0.15, "ether"), web3.to_wei(0.25, "ether")]
@@ -142,12 +117,7 @@ def run_auction_round(auction_holder=True, energy_amount=5):
     time.sleep(1)  # Additional delay to ensure all bids are submitted
 
     # Step 5: Reveal bids
-
-    bidders = auction_contract.functions.getBidders().call()
-    print(bidders)
-    bidders, deposits = auction_contract.functions.getBidDeposits().call()
-
-    for bidder, deposit in zip(bidders, deposits):
+    for bidder, deposit in zip(bidders, bid_values):
         print(f"Bidder: {bidder}, Deposit: {deposit}")
 
     for i, bidder in enumerate(bidders):
@@ -167,7 +137,7 @@ def run_auction_round(auction_holder=True, energy_amount=5):
     print("Close auction...")
     try:
         tx = auction_contract.functions.closeAuction().transact({
-            "from": accounts[0],
+            "from": auctioneer,
             "gas": 3000000
         })
         web3.eth.wait_for_transaction_receipt(tx)
@@ -179,7 +149,8 @@ def run_auction_round(auction_holder=True, energy_amount=5):
     except Exception as e:
         print(f"Failed to close auction: {e}")
 
-def reset_auction():
+
+def reset_auction(auctioneer, auction_contract, web3):
     print("Resetting the auction for the next round...")
 
     # Get the current time (in seconds) to print when the new auction will end
@@ -192,7 +163,7 @@ def reset_auction():
     try:
         # Call the resetAuction function with the bidding and reveal time
         tx_reset = auction_contract.functions.resetAuction(bidding_time, reveal_time).transact({
-            "from": accounts[0],  # Auctioneer resets
+            "from": auctioneer,  # Auctioneer resets
             "gas": 3000000
         })
         web3.eth.wait_for_transaction_receipt(tx_reset)
@@ -211,8 +182,42 @@ def reset_auction():
     except Exception as e:
         print(f"Failed to reset auction: {e}")
 
+
+
+
 # Main loop for running and resetting auctions on schedule
 def main():
+    # Connect to local blockchain (Ganache)
+    web3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
+    assert web3.is_connected(), "Failed to connect to the blockchain"
+
+    contract_address = os.getenv("CONTRACT_ADDRESS")
+    assert contract_address, "Contract address not found in .env file."
+
+    # Ensure the contract is deployed
+    code = web3.eth.get_code(contract_address)
+    assert code != b'0x', "Contract address is invalid or the contract is not deployed."
+
+    # Load the contract ABI dynamically
+    contract_path = os.path.join(project_dir, "5014-Project", "blockchain", "build", "contracts", "EnergyVickreyAuction.json")
+    print(contract_path)
+    with open(contract_path, "r") as abi_file:
+        contract_data = json.load(abi_file)
+
+    # Validate ABI structure
+    if 'abi' not in contract_data or not isinstance(contract_data['abi'], list):
+        raise ValueError("ABI is missing or invalid in the contract JSON file.")
+
+    contract_abi = contract_data['abi']
+    print(f"Ganache connected: {web3.is_connected()}")
+
+    # Initialize the contract
+    auction_contract = web3.eth.contract(address=contract_address, abi=contract_abi)
+
+    # Define bidder accounts (from Ganache)
+    accounts = web3.eth.accounts
+    bidders = accounts[2:6]  # Assuming you have 4 bidders, adjust as needed
+    auctioneer = accounts[1] # Make the first account for holding auctions
     auction_holder = True
     
     A = 3
@@ -226,13 +231,13 @@ def main():
             x += 0.1
 
             # Run auction round
-            run_auction_round(auction_holder, energy_amount)
+            run_auction_round(bidders, auction_contract, auctioneer, web3, auction_holder, energy_amount)
             
             # Flip the status of auction holder and await the next auction.
             auction_holder = not auction_holder
 
             # Call the reset auction function
-            reset_auction()
+            reset_auction(auctioneer, auction_contract, web3)
 
             # Wait for the next auction to start
             print("Waiting for the next auction round...")

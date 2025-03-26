@@ -172,3 +172,6 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Dumb database file that keeps populating!
+energy_data.db

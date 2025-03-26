@@ -76,9 +76,9 @@ class NegotiationAgent(Agent):
             print(f"[NegotiationAgent] Wait time: {diff}")
             while diff > 1:
                 diff = (end_datetime - datetime.now()).total_seconds()
-                asyncio.sleep(diff/2)
+                await asyncio.sleep(diff/2)
             print("[NegotiationAgent] Wait over...")
-            asyncio.sleep(2)
+            await asyncio.sleep(2)
             return
         
         async def start_auction(self, energy_amount=5):
