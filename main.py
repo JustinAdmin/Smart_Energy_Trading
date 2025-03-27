@@ -26,24 +26,62 @@ def start_streamlit():
     return streamlit_process
 
 def start_ganache():
-    print("🟡 Starting Ganache CLI in a new PowerShell window...")
-    ganache_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'ganache-cli --networkId 5777'"])
-    time.sleep(2)
-    print("✅ Ganache CLI started in a separate window!")
-    return ganache_process
+    """Starts Ganache CLI in a separate PowerShell window."""
+    print("🟡 Starting Ganache CLI...")
+    try:
+        # Add --hardfork shanghai
+        ganache_args = "'ganache-cli --networkId 5777 --hardfork shanghai'"
+        command_list = ["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList", ganache_args]
+        ganache_process = subprocess.Popen(command_list)
+        print("   Waiting for Ganache to initialize (using Shanghai hardfork)...")
+        time.sleep(5)
+        print("✅ Ganache CLI should be running in a separate window.")
+        return ganache_process
+    except FileNotFoundError:
+        print("❌ Error: 'powershell' or 'ganache-cli' command not found.")
+        return None
+    except Exception as e:
+        print(f"❌ Error starting Ganache: {e}")
+        return None
 
 def deploy_smart_contract():
+    """Deploys the smart contract using Truffle in a separate PowerShell window."""
     print("🟡 Deploying the smart contract...")
-    print(f"Current working directory: {os.getcwd()}")
-    
-    # Update the Popen command to use the 'development' network defined in truffle-config.js
-    deployment_process = subprocess.Popen(["powershell", "-Command",
-                                           "Start-Process", "powershell",
-                                           "-ArgumentList 'cd blockchain; fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression; truffle migrate --network development --reset; Pause'"],
-                                           cwd=os.getcwd())
-    time.sleep(15)  # Allow time for the process to start
-    print("✅ Smart contract deployed!")
-    return deployment_process
+    project_root = os.path.dirname(os.path.dirname(__file__))
+    blockchain_dir = os.path.join(project_root, "blockchain")
+    print(f"   Running deployment from project root: {project_root}")
+    print(f"   Expecting 'blockchain' directory at: {blockchain_dir}")
+
+    if not os.path.isdir(blockchain_dir):
+         print(f"❌ Error: 'blockchain' directory not found at expected location: {blockchain_dir}")
+         return False
+
+    # --- MODIFICATION HERE: Removed '; Pause' ---
+    argument_string = (
+        f"'cd {blockchain_dir}; "
+        f"fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression; "
+        f"truffle migrate --network development --reset'" # Removed '; Pause' from the end
+    )
+    command_list = [
+        "powershell", "-Command",
+        "Start-Process", "powershell",
+        "-ArgumentList", argument_string
+    ]
+    # --- END MODIFICATION ---
+
+    try:
+        deployment_process = subprocess.Popen(command_list)
+        # This sleep is CRITICAL - it gives time for truffle migrate AND the .env update to finish
+        print("   Waiting for deployment and .env update to complete (approx 25s)...")
+        time.sleep(25) # Adjust if needed, but crucial for automation
+        print("✅ Smart contract deployment process finished (check background window for errors if issues arise).")
+        return True # Indicate deployment process was started and waited for
+    except FileNotFoundError:
+        print("❌ Error: 'powershell', 'fnm', or 'truffle' command not found.")
+        return False
+    except Exception as e:
+        print(f"❌ Error initiating deployment: {e}")
+        return False
 
 def start_smart_grid():
     print("🟡 Starting SPADE server in a new PowerShell window...")
@@ -88,8 +126,8 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("🛑 Shutting down processes...")
-        spade_process.kill()
-        streamlit_process.kill()
-        ganache_process.kill()
-        deployment_process.kill()
+        spade_process.terminate()
+        streamlit_process.terminate()
+        ganache_process.terminate()
+        deployment_process.terminate()
         print("✅ Cleanup complete. Exiting.")
