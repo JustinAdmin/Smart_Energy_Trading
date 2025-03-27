@@ -48,7 +48,7 @@ def deploy_smart_contract():
     """Deploys the smart contract using Truffle in a separate PowerShell window."""
     print("🟡 Deploying the smart contract...")
     project_root = os.path.dirname(os.path.dirname(__file__))
-    blockchain_dir = os.path.join(project_root, "blockchain")
+    blockchain_dir = os.path.join(project_root,"5014-Project", "blockchain")
     print(f"   Running deployment from project root: {project_root}")
     print(f"   Expecting 'blockchain' directory at: {blockchain_dir}")
 
