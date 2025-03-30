@@ -84,7 +84,7 @@ def deploy_smart_contract():
         return False
 
 def start_smart_grid():
-    print("🟡 Starting SPADE server in a new PowerShell window...")
+    print("🟡 Starting Smart-Grid in a new PowerShell window...")
     spade_process = subprocess.Popen(["powershell", "-Command", "Start-Process", "powershell", "-ArgumentList 'python smart_grid.py'"])
     time.sleep(2)
     print("✅ Smart-Grid started in a separate window!")
