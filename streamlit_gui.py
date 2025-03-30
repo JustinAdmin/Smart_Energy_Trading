@@ -128,10 +128,12 @@ if conn:
     # Expand to 4 columns for Predictions KPIs
     kpi_cols = st.columns(6)
 
-    latest_bought = df_summary_latest['total_energy_bought_kwh'].iloc[0] if not df_summary_latest.empty else 0
-    latest_sold = df_summary_latest['total_energy_sold_kwh'].iloc[0] if not df_summary_latest.empty else 0
-    
-    net_traded = latest_sold - latest_bought
+    #latest_bought = df_blockchain['total_energy_bought_kwh'].iloc[0] if not df_summary_latest.empty else 0
+    #latest_sold = df_blockchain['total_energy_sold_kwh'].iloc[0] if not df_summary_latest.empty else 0
+    energy_bought = df_blockchain['energy_kwh'].iloc[0] if not df_summary_latest.empty else 0
+    energy_price = df_blockchain['price_eth'].iloc[0] if not df_summary_latest.empty else 0
+    #net_traded = latest_sold - latest_bought
+    energy_price += energy_price # Add latest price to total  
 
     # --- Prediction KPIs ---
     latest_pred_prod = df_preds['predicted_production'].iloc[-1] if not df_preds.empty else 0
@@ -157,8 +159,8 @@ if conn:
          st.markdown("**Negotiation Wallet**")
          st.text_area("Address (from log)", value=agent_address_display, disabled=True, label_visibility="collapsed")
 
-    with kpi_cols[4]: st.metric(label="🛒 Energy Bought (kWh)", value=f"{latest_bought:.2f}", help="Total energy bought via auctions.")
-    with kpi_cols[5]: st.metric(label="💰 Energy Sold (kWh)", value=f"{latest_sold:.2f}", help="Total energy sold via auctions.")
+    with kpi_cols[4]: st.metric(label="🛒 Energy Bought (kWh)", value=f"{energy_bought:.2f}", help="Total energy bought via auctions.")
+    with kpi_cols[5]: st.metric(label="💰 Total Spend (ETH)", value=f"{energy_price:.2f}", help="Total energy sold via auctions.")
     st.markdown("---")
 
     # --- Energy Charts ---
@@ -261,8 +263,14 @@ if conn:
     with st.expander("Raw Data Explorer"):
         st.subheader("Actual Production Data")
         st.dataframe(df_prod.sort_index(ascending=False), use_container_width=True)
+        # --- Production Data ---
+        st.subheader("Actual Production Data")
+        st.dataframe(df_prod.sort_index(ascending=False), use_container_width=True)
         st.subheader("Actual Consumption Data")
         st.dataframe(df_cons.sort_index(ascending=False), use_container_width=True)
+        # --- Demand Response Data ---
+        st.subheader("Demand Response Log Data")
+        st.dataframe(dR_log.sort_index(ascending=False), use_container_width=True)
         # --- Add Predictions Table ---
         st.subheader("Predictions Data")
         st.dataframe(df_preds.sort_index(ascending=False), use_container_width=True)
