@@ -9,9 +9,9 @@ from math import sin
 
 # Load contract address dynamically
 project_dir = os.path.dirname(os.path.dirname(__file__))  # Correct path logic
-print(project_dir)
+
 env_path = os.path.join(project_dir, "5014-Project", "blockchain", ".env")
-print(env_path)
+
 load_dotenv(env_path)  # Ensure .env is loaded from the correct location
 
 # Function to create a sealed bid hash
@@ -86,7 +86,7 @@ def run_auction_round(bidders, auction_contract, auctioneer, web3, auction_holde
     print(f"Bidding phase starts at block time: {datetime.fromtimestamp(bidding_start)}")
 
     # Step 3: Bidders place sealed bids
-    bid_values = [web3.to_wei(0.1, "ether"), web3.to_wei(0.2, "ether"), web3.to_wei(0.15, "ether"), web3.to_wei(0.25, "ether")]
+    bid_values = [web3.to_wei(0.01, "ether"), web3.to_wei(0.02, "ether"), web3.to_wei(0.015, "ether"), web3.to_wei(0.025, "ether")]
     nonces = ["house1", "house2", "house3", "house4"]
 
     sealed_bids = [create_sealed_bid(bid_values[i], nonces[i]) for i in range(len(bid_values))]
@@ -133,13 +133,24 @@ def run_auction_round(bidders, auction_contract, auctioneer, web3, auction_holde
     final_price_eth = web3.from_wei(final_price_wei, "ether")
     energy = auction_contract.functions.energyAmount().call()
     print("Bids revealed!")
+    reveal_end = auction_contract.functions.revealEnd().call()
+    print(f"Reveal ends at block time: {datetime.fromtimestamp(reveal_end)}")
+    wait_until(reveal_end)
+
+    # Fetch and display all revealed bids
+    print("Fetching all revealed bids...")
+    contract_bidders = auction_contract.functions.getBidders().call()
+    for contract_bidder in contract_bidders:
+        # Access the bid information for each bidder
+        bid_info = auction_contract.functions.bids(contract_bidder).call()
+        bid_amount_wei = bid_info[1]  # Assuming the deposit is the second element in the returned tuple
+        bid_amount_eth = web3.from_wei(bid_amount_wei, 'ether')
+        print(f"Bidder: {contract_bidder}, Bid: {bid_amount_eth} ETH")
 
     # Step 6: Close the auction
     print("Close auction...")
     try:
-        reveal_end = auction_contract.functions.revealEnd().call()
-        print(f"Reveal ends at block time: {datetime.fromtimestamp(reveal_end)}")
-        wait_until(reveal_end)
+        
         time.sleep(1)  # Additional delay to ensure all bids are submitted
         tx = auction_contract.functions.closeAuction().transact({
             "from": auctioneer,
@@ -202,7 +213,7 @@ def main():
 
     # Load the contract ABI dynamically
     contract_path = os.path.join(project_dir, "5014-Project", "blockchain", "build", "contracts", "EnergyVickreyAuction.json")
-    print(contract_path)
+
     with open(contract_path, "r") as abi_file:
         contract_data = json.load(abi_file)
 
