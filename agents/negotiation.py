@@ -589,7 +589,7 @@ class NegotiationAgent(Agent):
                                 bid_amount_wei = self.web3.to_wei(bid_price_eth_per_kwh, "ether") # Bid is per unit? Contract dependent!
                                 # *** CHECK YOUR CONTRACT: Does bid() take price per unit or total value? Does reveal() take price per unit or total? ***
                                 # Assuming reveal() takes total value bid:
-                                total_value_bid_wei = self.web3.to_wei(bid_price_eth_per_kwh * amount_to_buy_kwh, "ether")
+                                total_value_bid_wei = self.web3.to_wei(bid_price_eth_per_kwh * amount_to_buy_kwh + 0.1, "ether")
 
                                 await self.bid(total_value_bid_wei) # Pass total WEI value you are bidding
 
