@@ -1,5 +1,7 @@
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
+from spade.behaviour import PeriodicBehaviour
+from spade.template import Template
 from spade.message import Message
 from web3 import Web3
 import json
@@ -8,10 +10,11 @@ from dotenv import load_dotenv # pip install python-dotenv
 import asyncio
 import time # Use time for timestamping
 import sqlite3 # Import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # --- Database Configuration ---
 DB_NAME = "energy_data.db" # Use the same DB name
+SUMMARY_LOG_INTERVAL = 45 # Log summary every 45 seconds
 
 # --- Helper Function for DB Logging ---
 def log_blockchain_event(db_name, timestamp, agent_account, event_type, energy_kwh, price_eth, balance_eth, counterparty=None, status="Success", auction_id=None):
@@ -47,14 +50,55 @@ def initialize_blockchain_table(db_name):
     conn.close()
     print("[NegotiationAgent] Blockchain log table initialized.")
 
+def initialize_trade_summary_table(db_name):
+    """Creates the trade summary table if it doesn't exist."""
+    try:
+        conn = sqlite3.connect(db_name)
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS trade_summary (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp REAL, total_energy_bought_kwh REAL, total_energy_sold_kwh REAL
+            )
+        """)
+        conn.commit()
+        conn.close()
+        print("[NegotiationAgent] Trade Summary table initialized.")
+    except Exception as e:
+        print(f"[NegotiationAgent] ERROR initializing Trade Summary table: {e}")
 
+def log_trade_summary(db_name, timestamp, total_bought, total_sold):
+    """Logs the cumulative trade summary to the database."""
+    try:
+        conn = sqlite3.connect(db_name)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO trade_summary (timestamp, total_energy_bought_kwh, total_energy_sold_kwh)
+            VALUES (?, ?, ?)
+        """, (timestamp, float(total_bought), float(total_sold)))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[NegotiationAgent] ERROR logging Trade Summary: {e}")
+        
 # Negotiation Agent: Facilitates peer-to-peer energy trading
 class NegotiationAgent(Agent):
+    class LogSummaryBehaviour(PeriodicBehaviour):
+        async def run(self):
+            print("[NegotiationAgent][Summary] Logging trade summary...")
+            try:
+                log_trade_summary(
+                    self.agent.db_name, time.time(),
+                    self.agent.total_energy_bought, self.agent.total_energy_sold
+                )
+            except Exception as e:
+                print(f"[NegotiationAgent][Summary] Error during summary log: {e}")
     class TradingBehaviour(CyclicBehaviour):
         async def on_start(self):
             # --- Database Initialization ---
             self.db_name = DB_NAME
             initialize_blockchain_table(self.db_name) # Create the table
+            initialize_trade_summary_table(self.db_name) # Create the trade summary table
             # --- End Database Init ---
 
             # Connect to local blockchain (Ganache)
@@ -486,7 +530,35 @@ class NegotiationAgent(Agent):
                         current_demand = house_data.get("current_demand", 0)
                         market_price_eth_per_kwh = demand_response_data.get("market_value", 0.1) # Default market price?
                         strategy = gui_data.get("strategy", "neutral") # Default strategy
+                
+                # --- ROBUST CHECK FOR REQUIRED DATA ---
+                        # Check if the core dictionaries exist and are dictionaries
+                        if not isinstance(house_data, dict):
+                            print(f"[N] Missing or invalid 'house' data in message.")
+                            return # Skip cycle if essential data is missing/wrong type
+                        if not isinstance(demand_response_data, dict):
+                            print(f"[N] Missing or invalid 'demandresponse' data in message.")
+                            return
+                        if not isinstance(gui_data, dict):
+                             print(f"[N] Missing or invalid 'gui' data in message.")
+                             return
+                        # Check for specific required keys WITHIN the dictionaries
+                        if not all(k in house_data for k in ["current_production", "current_demand"]):
+                            print(f"[N] Missing required keys in 'house' data.")
+                            return
+                        if "market_value" not in demand_response_data:
+                             print(f"[N] Missing required 'market_value' in 'demandresponse' data.")
+                             return
+                        if "strategy" not in gui_data:
+                              print(f"[N] Missing required 'strategy' in 'gui' data.")
+                              return
+                        # --- END ROBUST CHECK ---
 
+                    # If checks pass, we can safely access the data
+                        current_prod = house_data["current_production"]
+                        current_demand = house_data["current_demand"]
+                        market_price_eth_per_kwh = demand_response_data["market_value"]
+                        strategy = gui_data["strategy"]
                         energy_delta_kwh = current_prod - current_demand
                         print(f"[NegotiationAgent] Calculated Energy Delta: {energy_delta_kwh:.2f} kWh")
 
@@ -561,7 +633,6 @@ class NegotiationAgent(Agent):
                          print("[NegotiationAgent] In reveal phase (no message). Attempting reveal.")
                          await self.reveal()
 
-
             except json.JSONDecodeError:
                 print(f"[NegotiationAgent] Error decoding JSON from message: {msg.body}")
             except AssertionError as ae:
@@ -584,7 +655,11 @@ class NegotiationAgent(Agent):
         # Add the trading behavior
         trading_b = self.TradingBehaviour()
         self.add_behaviour(trading_b)
-
+        start_at = datetime.now() + timedelta(seconds=15) # Delay summary log start slightly
+        log_summary_b = self.LogSummaryBehaviour(period=SUMMARY_LOG_INTERVAL, start_at=start_at)
+        self.add_behaviour(log_summary_b)
+        print(f"[N] Summary logging added (Interval: {SUMMARY_LOG_INTERVAL}s)")
+        
         # Optional: Add a periodic behavior just for logging balance
         # from spade.behaviour import PeriodicBehaviour
         # class LogBalanceBehaviour(PeriodicBehaviour):

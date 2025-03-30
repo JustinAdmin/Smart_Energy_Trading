@@ -9,6 +9,10 @@ DB_NAME = "energy_data.db"
 REFRESH_INTERVAL_SECONDS = 10
 DEFAULT_HISTORY_MINUTES = 60
 
+# --- NEW: GUIAgent Web Endpoint ---
+GUI_AGENT_URL = f"http://localhost:{9099}" # Match port in GUIAgent
+STRATEGY_ENDPOINT = f"{GUI_AGENT_URL}/set_strategy"
+
 # --- Database Functions ---
 @st.cache_resource
 def connect_db():
@@ -36,11 +40,10 @@ def fetch_recent_data(_conn, table_name, minutes_back, parse_dates_col=None, ind
         cols = []
         if table_name == "blockchain_log":
             cols = ['id', 'timestamp', 'agent_account', 'event_type', 'energy_kwh', 'price_eth', 'balance_eth', 'counterparty_address', 'status', 'auction_id']
-        elif table_name in ["energy_production", "energy_consumption"]:
-            cols = ['id', 'timestamp', 'value']
         elif table_name == "predictions": # <-- Added for predictions table
             cols = ['id', 'timestamp', 'predicted_demand', 'predicted_production']
-
+        elif table_name == "demand_response_log":
+            cols = ['id', 'timestamp', 'grid_predicted_demand', 'grid_predicted_supply', 'energy_rate_per_kwh', 'curtailment_kw']
         if cols:
             empty_df = pd.DataFrame(columns=[col for col in cols if col != 'datetime'])
             empty_df['datetime'] = pd.to_datetime([])
@@ -57,6 +60,11 @@ st.set_page_config(layout="wide", page_title="Smart Home Energy Dashboard")
 st.title("⚡ Smart Home Energy & Blockchain Dashboard")
 st.caption(f"Visualizing data from `{DB_NAME}`. Refreshing approx. every {REFRESH_INTERVAL_SECONDS} seconds.")
 
+
+# Initialize session state for strategy
+if 'current_ui_strategy' not in st.session_state:
+    st.session_state['current_ui_strategy'] = 'neutral' # Default on first load
+
 conn = connect_db()
 
 if conn:
@@ -66,37 +74,71 @@ if conn:
     if st.sidebar.button("🔄 Refresh Now"):
         st.cache_data.clear()
         st.rerun()
+        
+     # --- NEW: Strategy Selection ---
+    st.sidebar.subheader("Trading Strategy")
+    strategy_options = ["conservative", "neutral", "aggressive"]
+    # Use st.session_state to keep track of the selection
+    selected_strategy = st.sidebar.radio(
+        "Set Negotiation Agent Strategy:",
+        options=strategy_options,
+        index=strategy_options.index(st.session_state.current_ui_strategy), # Set default index based on state
+        key="strategy_radio" # Assign a key for stability
+    )
+
+    # Check if the selection changed and update the agent if necessary
+    if selected_strategy != st.session_state.current_ui_strategy:
+        st.session_state.current_ui_strategy = selected_strategy # Update state first
+        payload = json.dumps({"strategy": selected_strategy})
+        headers = {'Content-Type': 'application/json'}
+        status_placeholder = st.sidebar.empty() # To show status messages
+        try:
+            status_placeholder.info(f"Attempting to set strategy to {selected_strategy}...")
+            response = requests.post(STRATEGY_ENDPOINT, data=payload, headers=headers, timeout=5) # Add timeout
+            response.raise_for_status() # Raise exception for bad status codes (4xx or 5xx)
+            # Check response content if needed
+            # response_data = response.json()
+            status_placeholder.success(f"✅ Strategy set to {selected_strategy}!")
+            time.sleep(1.5) # Briefly show success message
+            status_placeholder.empty() # Clear message
+        except requests.exceptions.ConnectionError:
+             status_placeholder.error(f"❌ Connection Error: Could not reach GUIAgent at {GUI_AGENT_URL}. Is it running?")
+        except requests.exceptions.Timeout:
+            status_placeholder.error("❌ Timeout: GUIAgent did not respond.")
+        except requests.exceptions.RequestException as e:
+             status_placeholder.error(f"❌ Failed to set strategy: {e}")
+             try:
+                 # Try to get more detail from agent's response
+                 error_detail = e.response.json().get("message", "No details")
+                 st.sidebar.caption(f"Agent Error: {error_detail}")
+             except: pass # Ignore errors getting details
+    # --- END Strategy Selection ---
 
     # --- Fetch Data ---
+    dR_log = fetch_recent_data(conn, "demand_response_log", history_minutes, 'timestamp', 'datetime')
     df_prod = fetch_recent_data(conn, "energy_production", history_minutes, 'timestamp', 'datetime')
     df_cons = fetch_recent_data(conn, "energy_consumption", history_minutes, 'timestamp', 'datetime')
     df_blockchain = fetch_recent_data(conn, "blockchain_log", history_minutes, 'timestamp')
     # --- Fetch Prediction Data ---
     df_preds = fetch_recent_data(conn, "predictions", history_minutes, 'timestamp', 'datetime') # Use datetime index
-
+    df_summary_latest = fetch_recent_data(conn, "trade_summary", history_minutes * 2)
+    if not df_summary_latest.empty: df_summary_latest = df_summary_latest.sort_values(by='timestamp', ascending=False).iloc[[0]]
     # --- KPIs ---
     st.header("📊 Live Metrics")
-    # Expand to 7 columns for Predictions KPIs
-    kpi_cols = st.columns(7)
+    # Expand to 4 columns for Predictions KPIs
+    kpi_cols = st.columns(6)
 
-    # Energy KPIs
-    latest_prod = df_prod['value'].iloc[-1] if not df_prod.empty else 0
-    latest_cons = df_cons['value'].iloc[-1] if not df_cons.empty else 0
-    net_power = latest_prod - latest_cons
-    with kpi_cols[0]: st.metric(label="☀️ Actual Prod (kW)", value=f"{latest_prod:.2f}")
-    with kpi_cols[1]: st.metric(label="🏠 Actual Cons (kW)", value=f"{latest_cons:.2f}")
-    with kpi_cols[2]:
-        delta_val = f"{abs(net_power):.2f}"
-        delta_color = "normal" if net_power >= 0 else "inverse"
-        delta_text = f"{delta_val} (Export)" if net_power >= 0 else f"{delta_val} (Import)"
-        st.metric(label="⚡ Net Power (kW)", value=f"{net_power:.2f}", delta=delta_text, delta_color=delta_color)
+    latest_bought = df_summary_latest['total_energy_bought_kwh'].iloc[0] if not df_summary_latest.empty else 0
+    latest_sold = df_summary_latest['total_energy_sold_kwh'].iloc[0] if not df_summary_latest.empty else 0
+    
+    net_traded = latest_sold - latest_bought
 
     # --- Prediction KPIs ---
     latest_pred_prod = df_preds['predicted_production'].iloc[-1] if not df_preds.empty else 0
     latest_pred_demand = df_preds['predicted_demand'].iloc[-1] if not df_preds.empty else 0
-    with kpi_cols[3]:
+    with kpi_cols[0]:
         st.metric(label="📈 Pred. Prod (kW)", value=f"{latest_pred_prod:.2f}")
-    with kpi_cols[4]:
+    with kpi_cols[1]:
         st.metric(label="📉 Pred. Demand (kW)", value=f"{latest_pred_demand:.2f}")
 
 
@@ -110,24 +152,41 @@ if conn:
         else: agent_address_display = "Address N/A"
     else: agent_address_display = "No logs yet..."
 
-    with kpi_cols[5]: st.metric(label="💰 Wallet Balance (ETH)", value=f"{latest_balance_eth:.6f}")
-    with kpi_cols[6]:
+    with kpi_cols[2]: st.metric(label="💰 Wallet Balance (ETH)", value=f"{latest_balance_eth:.6f}")
+    with kpi_cols[3]:
          st.markdown("**Negotiation Wallet**")
          st.text_area("Address (from log)", value=agent_address_display, disabled=True, label_visibility="collapsed")
 
+    with kpi_cols[4]: st.metric(label="🛒 Energy Bought (kWh)", value=f"{latest_bought:.2f}", help="Total energy bought via auctions.")
+    with kpi_cols[5]: st.metric(label="💰 Energy Sold (kWh)", value=f"{latest_sold:.2f}", help="Total energy sold via auctions.")
     st.markdown("---")
 
     # --- Energy Charts ---
     st.header("📈 Energy Trends (Actuals)")
-    chart_cols_actual = st.columns(2)
-    with chart_cols_actual[0]:
-        st.subheader("☀️ Actual Production")
-        if not df_prod.empty: st.line_chart(df_prod[['value']].rename(columns={'value': 'Prod (kW)'}), use_container_width=True)
-        else: st.warning("No recent production data.")
-    with chart_cols_actual[1]:
-        st.subheader("🏠 Actual Consumption")
-        if not df_cons.empty: st.line_chart(df_cons[['value']].rename(columns={'value': 'Cons (kW)'}), use_container_width=True)
-        else: st.warning("No recent consumption data.")
+    DR_kpi_cols = st.columns(4)
+
+# cols = ['id', 'timestamp', 'grid_predicted_demand', 'grid_predicted_supply', 'energy_rate_per_kwh', 'curtailment_kw']
+    # Energy KPIs
+    latest_prod = dR_log['grid_predicted_demand'].iloc[-1] if not dR_log.empty else 0
+    latest_cons = dR_log['grid_predicted_supply'].iloc[-1] if not dR_log.empty else 0
+    net_power = latest_prod - latest_cons
+    with DR_kpi_cols[0]: st.metric(label="☀️ grid demand (kW)", value=f"{latest_prod:.2f}")
+    with DR_kpi_cols[1]: st.metric(label="🏠 Grid supply (kW)", value=f"{latest_cons:.2f}")
+    with DR_kpi_cols[2]:
+        delta_val = f"{abs(net_power):.2f}"
+        delta_color = "normal" if net_power >= 0 else "inverse"
+        delta_text = f"{delta_val} (Export)" if net_power >= 0 else f"{delta_val} (Import)"
+        st.metric(label="⚡ Net Power (kW)", value=f"{net_power:.2f}", delta=delta_text, delta_color=delta_color)
+
+#    chart_cols_actual = st.columns(2)
+#    with chart_cols_actual[0]:
+#        st.subheader("☀️ Actual Production")
+#        if not df_prod.empty: st.line_chart(df_prod[['value']].rename(columns={'value': 'Prod (kW)'}), use_container_width=True)
+#        else: st.warning("No recent production data.")
+#    with chart_cols_actual[1]:
+#        st.subheader("🏠 Actual Consumption")
+#        if not df_cons.empty: st.line_chart(df_cons[['value']].rename(columns={'value': 'Cons (kW)'}), use_container_width=True)
+#        else: st.warning("No recent consumption data.")
 
     # --- Prediction Charts ---
     st.header("🔮 Energy Forecasts")
