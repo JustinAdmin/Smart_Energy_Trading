@@ -67,33 +67,34 @@ def initialize_trade_summary_table(db_name):
     except Exception as e:
         print(f"[NegotiationAgent] ERROR initializing Trade Summary table: {e}")
 
-def log_trade_summary(db_name, timestamp, total_bought, total_sold):
-    """Logs the cumulative trade summary to the database."""
-    try:
-        conn = sqlite3.connect(db_name)
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO trade_summary (timestamp, total_energy_bought_kwh, total_energy_sold_kwh)
-            VALUES (?, ?, ?)
-        """, (timestamp, float(total_bought), float(total_sold)))
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"[NegotiationAgent] ERROR logging Trade Summary: {e}")
+
         
 # Negotiation Agent: Facilitates peer-to-peer energy trading
 class NegotiationAgent(Agent):
-    class LogSummaryBehaviour(PeriodicBehaviour):
-        async def run(self):
-            print("[NegotiationAgent][Summary] Logging trade summary...")
+    class TradingBehaviour(CyclicBehaviour):
+        async def log_trade_summary(db_name, timestamp, total_bought, total_sold):
+            """Logs the cumulative trade summary to the database."""
             try:
-                log_trade_summary(
+                conn = sqlite3.connect(db_name)
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO trade_summary (timestamp, total_energy_bought_kwh, total_energy_sold_kwh)
+                    VALUES (?, ?, ?)
+                """, (timestamp, float(total_bought), float(total_sold)))
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print(f"[NegotiationAgent] ERROR logging Trade Summary: {e}")
+        
+        async def call_trade_summary(self):
+            try:
+                self.log_trade_summary(
                     self.agent.db_name, time.time(),
                     self.agent.total_energy_bought, self.agent.total_energy_sold
                 )
             except Exception as e:
                 print(f"[NegotiationAgent][Summary] Error during summary log: {e}")
-    class TradingBehaviour(CyclicBehaviour):
+
         async def on_start(self):
             # --- Database Initialization ---
             self.db_name = DB_NAME
@@ -632,6 +633,8 @@ class NegotiationAgent(Agent):
                     if current_state == 2 and self.bid_amount > 0:
                          print("[NegotiationAgent] In reveal phase (no message). Attempting reveal.")
                          await self.reveal()
+                
+                await self.call_trade_summary()
 
             except json.JSONDecodeError:
                 print(f"[NegotiationAgent] Error decoding JSON from message: {msg.body}")
@@ -655,20 +658,6 @@ class NegotiationAgent(Agent):
         # Add the trading behavior
         trading_b = self.TradingBehaviour()
         self.add_behaviour(trading_b)
-        start_at = datetime.now() + timedelta(seconds=15) # Delay summary log start slightly
-        log_summary_b = self.LogSummaryBehaviour(period=SUMMARY_LOG_INTERVAL, start_at=start_at)
-        self.add_behaviour(log_summary_b)
-        print(f"[N] Summary logging added (Interval: {SUMMARY_LOG_INTERVAL}s)")
-        
-        # Optional: Add a periodic behavior just for logging balance
-        # from spade.behaviour import PeriodicBehaviour
-        # class LogBalanceBehaviour(PeriodicBehaviour):
-        #     async def run(self):
-        #         print("[NegotiationAgent] Periodic balance check...")
-        #         await self.agent.TradingBehaviour.log_current_balance("Periodic") # Need access to the method
-        # balance_b = LogBalanceBehaviour(period=300) # Log every 5 minutes
-        # self.add_behaviour(balance_b)
-
         try:
             self.web.start(hostname="localhost", port="9095")
             print("[NegotiationAgent] Web server started.")
