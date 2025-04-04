@@ -72,7 +72,7 @@ def initialize_trade_summary_table(db_name):
 # Negotiation Agent: Facilitates peer-to-peer energy trading
 class NegotiationAgent(Agent):
     class TradingBehaviour(CyclicBehaviour):
-        async def log_trade_summary(db_name, timestamp, total_bought, total_sold):
+        async def log_trade_summary(self, db_name, timestamp, total_bought, total_sold):
             """Logs the cumulative trade summary to the database."""
             try:
                 conn = sqlite3.connect(db_name)
@@ -89,14 +89,16 @@ class NegotiationAgent(Agent):
         async def call_trade_summary(self):
             try:
                 self.log_trade_summary(
-                    self.agent.db_name, time.time(),
-                    self.agent.total_energy_bought, self.agent.total_energy_sold
+                    self.db_name, time.time(),
+                    self.total_energy_bought, self.total_energy_sold
                 )
             except Exception as e:
                 print(f"[NegotiationAgent][Summary] Error during summary log: {e}")
 
         async def on_start(self):
             # --- Database Initialization ---
+            self.total_energy_bought = 0
+            self.total_energy_sold = 0
             self.db_name = DB_NAME
             initialize_blockchain_table(self.db_name) # Create the table
             initialize_trade_summary_table(self.db_name) # Create the trade summary table
@@ -590,7 +592,7 @@ class NegotiationAgent(Agent):
                                 # *** CHECK YOUR CONTRACT: Does bid() take price per unit or total value? Does reveal() take price per unit or total? ***
                                 # Assuming reveal() takes total value bid:
                                 total_value_bid_wei = self.web3.to_wei(bid_price_eth_per_kwh * amount_to_buy_kwh + 0.1, "ether")
-
+                                self.total_energy_bought += total_bid_value_eth
                                 await self.bid(total_value_bid_wei) # Pass total WEI value you are bidding
 
                             elif current_state == 2: # Reveal phase
@@ -618,21 +620,22 @@ class NegotiationAgent(Agent):
 
                                 amount_to_sell_kwh = energy_delta_kwh * sell_fraction
                                 if amount_to_sell_kwh > 0.01: # Minimum amount to auction
-                                     await self.start_auction(amount_to_sell_kwh)
+                                    await self.start_auction(amount_to_sell_kwh)
+                                    self.total_energy_sold  += amount_to_sell_kwh
                                 else:
-                                     print("[NegotiationAgent] Surplus too small to auction.")
+                                    print("[NegotiationAgent] Surplus too small to auction.")
                             else:
-                                 print(f"[NegotiationAgent] Cannot start auction, one is already in progress (State: {current_state}).")
+                                print(f"[NegotiationAgent] Cannot start auction, one is already in progress (State: {current_state}).")
 
                         else: # Close to balanced
-                             print("[NegotiationAgent] Energy nearly balanced. No buy/sell action needed.")
+                            print("[NegotiationAgent] Energy nearly balanced. No buy/sell action needed.")
 
                 else:
                     print("[NegotiationAgent] No message received in this cycle.")
                     # Agent can still perform actions based on time/state even without messages
                     if current_state == 2 and self.bid_amount > 0:
-                         print("[NegotiationAgent] In reveal phase (no message). Attempting reveal.")
-                         await self.reveal()
+                        print("[NegotiationAgent] In reveal phase (no message). Attempting reveal.")
+                        await self.reveal()
                 
                 await self.call_trade_summary()
 

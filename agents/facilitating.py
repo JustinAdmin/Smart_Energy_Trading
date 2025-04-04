@@ -11,7 +11,7 @@ class FacilitatingAgent(Agent):
     class MultiAgentHandler(CyclicBehaviour):
         async def on_start(self):
             self.dependencies = {
-                "gui": ["house"], # , "negotiation", "behavioralsegmentation"
+                "gui": ["house"],
                 "prediction": ["house"],
                 "demandresponse": ["grid", "house"],
                 "negotiation": ["house", "prediction", "demandresponse", "gui"],

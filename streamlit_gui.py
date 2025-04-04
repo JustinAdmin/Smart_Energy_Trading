@@ -42,8 +42,8 @@ def fetch_recent_data(_conn, table_name, minutes_back, parse_dates_col=None, ind
             cols = ['id', 'timestamp', 'agent_account', 'event_type', 'energy_kwh', 'price_eth', 'balance_eth', 'counterparty_address', 'status', 'auction_id']
         elif table_name == "predictions": # <-- Added for predictions table
             cols = ['id', 'timestamp', 'predicted_demand', 'predicted_production']
-        elif table_name == "demand_response_log":
-            cols = ['id', 'timestamp', 'grid_predicted_demand', 'grid_predicted_supply', 'energy_rate_per_kwh', 'curtailment_kw']
+        #elif table_name == "demand_response_log":
+        #    cols = ['id', 'timestamp', 'grid_predicted_demand', 'grid_predicted_supply', 'energy_rate_per_kwh', 'curtailment_kw']
         if cols:
             empty_df = pd.DataFrame(columns=[col for col in cols if col != 'datetime'])
             empty_df['datetime'] = pd.to_datetime([])
@@ -115,7 +115,7 @@ if conn:
     # --- END Strategy Selection ---
 
     # --- Fetch Data ---
-    dR_log = fetch_recent_data(conn, "demand_response_log", history_minutes, 'timestamp', 'datetime')
+    # dR_log = fetch_recent_data(conn, "demand_response_log", history_minutes, 'timestamp', 'datetime')
     df_prod = fetch_recent_data(conn, "energy_production", history_minutes, 'timestamp', 'datetime')
     df_cons = fetch_recent_data(conn, "energy_consumption", history_minutes, 'timestamp', 'datetime')
     df_blockchain = fetch_recent_data(conn, "blockchain_log", history_minutes, 'timestamp')
@@ -159,26 +159,26 @@ if conn:
          st.markdown("**Negotiation Wallet**")
          st.text_area("Address (from log)", value=agent_address_display, disabled=True, label_visibility="collapsed")
 
-    with kpi_cols[4]: st.metric(label="🛒 Energy Bought (kWh)", value=f"{energy_bought:.2f}", help="Total energy bought via auctions.")
-    with kpi_cols[5]: st.metric(label="💰 Total Spend (ETH)", value=f"{energy_price:.2f}", help="Total energy sold via auctions.")
+    #with kpi_cols[4]: st.metric(label="🛒 Energy Bought (kWh)", value=f"{energy_bought:.2f}", help="Total energy bought via auctions.")
+    #with kpi_cols[5]: st.metric(label="💰 Total Spend (ETH)", value=f"{energy_price:.2f}", help="Total energy sold via auctions.")
     st.markdown("---")
 
     # --- Energy Charts ---
-    st.header("📈 Energy Trends (Actuals)")
-    DR_kpi_cols = st.columns(4)
+    # st.header("📈 Energy Trends (Actuals)")
+    # DR_kpi_cols = st.columns(4)
 
 # cols = ['id', 'timestamp', 'grid_predicted_demand', 'grid_predicted_supply', 'energy_rate_per_kwh', 'curtailment_kw']
     # Energy KPIs
-    latest_prod = dR_log['grid_predicted_demand'].iloc[-1] if not dR_log.empty else 0
-    latest_cons = dR_log['grid_predicted_supply'].iloc[-1] if not dR_log.empty else 0
-    net_power = latest_prod - latest_cons
-    with DR_kpi_cols[0]: st.metric(label="☀️ grid demand (kW)", value=f"{latest_prod:.2f}")
-    with DR_kpi_cols[1]: st.metric(label="🏠 Grid supply (kW)", value=f"{latest_cons:.2f}")
-    with DR_kpi_cols[2]:
-        delta_val = f"{abs(net_power):.2f}"
-        delta_color = "normal" if net_power >= 0 else "inverse"
-        delta_text = f"{delta_val} (Export)" if net_power >= 0 else f"{delta_val} (Import)"
-        st.metric(label="⚡ Net Power (kW)", value=f"{net_power:.2f}", delta=delta_text, delta_color=delta_color)
+    # latest_prod = dR_log['grid_predicted_demand'].iloc[-1] if not dR_log.empty else 0
+    # latest_cons = dR_log['grid_predicted_supply'].iloc[-1] if not dR_log.empty else 0
+    # net_power = latest_prod - latest_cons
+    #with DR_kpi_cols[0]: st.metric(label="☀️ grid demand (kW)", value=f"{latest_prod:.2f}")
+    #with DR_kpi_cols[1]: st.metric(label="🏠 Grid supply (kW)", value=f"{latest_cons:.2f}")
+    #with DR_kpi_cols[2]:
+    #    delta_val = f"{abs(net_power):.2f}"
+    #    delta_color = "normal" if net_power >= 0 else "inverse"
+    #    delta_text = f"{delta_val} (Export)" if net_power >= 0 else f"{delta_val} (Import)"
+    #    st.metric(label="⚡ Net Power (kW)", value=f"{net_power:.2f}", delta=delta_text, delta_color=delta_color)
 
 #    chart_cols_actual = st.columns(2)
 #    with chart_cols_actual[0]:
@@ -207,25 +207,25 @@ if conn:
             st.warning("No recent demand forecast data.")
 
      #--- Optional: Combined Chart (Actual vs Predicted) ---
-        st.header("📊 Actual vs. Forecast")
-        combined_chart_cols = st.columns(2)
-        # Prepare dataframes for merging (ensure datetime index)
-        df_prod_vs_pred = pd.merge(df_prod[['value']].rename(columns={'value':'Actual Prod (kW)'}),
-                                   df_preds[['predicted_production']].rename(columns={'predicted_production':'Pred Prod (kW)'}),
-                                   left_index=True, right_index=True, how='outer') # Use outer join
-        df_cons_vs_pred = pd.merge(df_cons[['value']].rename(columns={'value':'Actual Cons (kW)'}),
-                                   df_preds[['predicted_demand']].rename(columns={'predicted_demand':'Pred Demand (kW)'}),
-                                   left_index=True, right_index=True, how='outer')
-        with combined_chart_cols[0]:
-             st.subheader("☀️ Production: Actual vs. Forecast")
-             if not df_prod_vs_pred.empty:
-                  st.line_chart(df_prod_vs_pred, use_container_width=True)
-             else: st.warning("No data for production comparison.")
-        with combined_chart_cols[1]:
-             st.subheader("🏠 Consumption: Actual vs. Forecast")
-             if not df_cons_vs_pred.empty:
-                  st.line_chart(df_cons_vs_pred, use_container_width=True)
-             else: st.warning("No data for consumption comparison.")
+        # st.header("📊 Actual vs. Forecast")
+        # combined_chart_cols = st.columns(2)
+        # # Prepare dataframes for merging (ensure datetime index)
+        # df_prod_vs_pred = pd.merge(df_prod[['value']].rename(columns={'value':'Actual Prod (kW)'}),
+        #                            df_preds[['predicted_production']].rename(columns={'predicted_production':'Pred Prod (kW)'}),
+        #                            left_index=True, right_index=True, how='outer') # Use outer join
+        # df_cons_vs_pred = pd.merge(df_cons[['value']].rename(columns={'value':'Actual Cons (kW)'}),
+        #                            df_preds[['predicted_demand']].rename(columns={'predicted_demand':'Pred Demand (kW)'}),
+        #                            left_index=True, right_index=True, how='outer')
+        # with combined_chart_cols[0]:
+        #      st.subheader("☀️ Production: Actual vs. Forecast")
+        #      if not df_prod_vs_pred.empty:
+        #           st.line_chart(df_prod_vs_pred, use_container_width=True)
+        #      else: st.warning("No data for production comparison.")
+        # with combined_chart_cols[1]:
+        #      st.subheader("🏠 Consumption: Actual vs. Forecast")
+        #      if not df_cons_vs_pred.empty:
+        #           st.line_chart(df_cons_vs_pred, use_container_width=True)
+        #      else: st.warning("No data for consumption comparison.")
 
 
     st.markdown("---")
@@ -269,8 +269,8 @@ if conn:
         st.subheader("Actual Consumption Data")
         st.dataframe(df_cons.sort_index(ascending=False), use_container_width=True)
         # --- Demand Response Data ---
-        st.subheader("Demand Response Log Data")
-        st.dataframe(dR_log.sort_index(ascending=False), use_container_width=True)
+        #st.subheader("Demand Response Log Data")
+        #st.dataframe(dR_log.sort_index(ascending=False), use_container_width=True)
         # --- Add Predictions Table ---
         st.subheader("Predictions Data")
         st.dataframe(df_preds.sort_index(ascending=False), use_container_width=True)
