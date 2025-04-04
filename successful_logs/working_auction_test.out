@@ -1,0 +1,57 @@
+Ganache connected: True
+Running new auction round...
+Auction started with bidding duration 15 and reveal duration 5!
+Bidding phase starts at block time: 2025-03-25 16:36:39
+Bid placed by 0x7c751d16f415099c75fEEa69e305eC212898ccad
+Bid placed by 0x489335A19976A10EF5a6baB7835F99147ed2FA04
+Bid placed by 0x81dde66F1baa055c85136627B7a68dbfF767b547
+Bid placed by 0xdaFdC8178415c01c3FEc929D12Bd983b5e0425A2
+Bids submitted! Moving to reveal phase...
+Reveal phase starts at block time: 2025-03-25 16:36:54
+Time Until End of Bid: 4.160756
+Time Until End of Bid: 2.079099
+Time Until End of Bid: 1.039174
+Time Until End of Bid: 0.517786
+Bid revealed by 0x7c751d16f415099c75fEEa69e305eC212898ccad!
+Bid revealed by 0x489335A19976A10EF5a6baB7835F99147ed2FA04!
+Bid revealed by 0x81dde66F1baa055c85136627B7a68dbfF767b547!
+Bid revealed by 0xdaFdC8178415c01c3FEc929D12Bd983b5e0425A2!
+Bids revealed!
+Finalizing auction...
+Auction Winner: 0xdaFdC8178415c01c3FEc929D12Bd983b5e0425A2 
+ Energy: 5 kWh
+ Price: 0.2 ETH
+Resetting the auction for the next round...
+Auction reset successfully!
+Next Auction Bidding Phase ends at: 2025-03-25 20:37:11
+Next Auction Reveal Phase ends at: 2025-03-25 20:37:16
+Completed 1 auction rounds.
+Waiting for the next auction round...
+Running new auction round...
+Auction started with bidding duration 15 and reveal duration 5!
+Bidding phase starts at block time: 2025-03-25 16:36:59
+Bid placed by 0x7c751d16f415099c75fEEa69e305eC212898ccad
+Bid placed by 0x489335A19976A10EF5a6baB7835F99147ed2FA04
+Bid placed by 0x81dde66F1baa055c85136627B7a68dbfF767b547
+Bid placed by 0xdaFdC8178415c01c3FEc929D12Bd983b5e0425A2
+Bids submitted! Moving to reveal phase...
+Reveal phase starts at block time: 2025-03-25 16:37:14
+Time Until End of Bid: 4.706173
+Time Until End of Bid: 2.351952
+Time Until End of Bid: 1.173515
+Time Until End of Bid: 0.58564
+Bid revealed by 0x7c751d16f415099c75fEEa69e305eC212898ccad!
+Bid revealed by 0x489335A19976A10EF5a6baB7835F99147ed2FA04!
+Bid revealed by 0x81dde66F1baa055c85136627B7a68dbfF767b547!
+Bid revealed by 0xdaFdC8178415c01c3FEc929D12Bd983b5e0425A2!
+Bids revealed!
+Finalizing auction...
+Auction Winner: 0xdaFdC8178415c01c3FEc929D12Bd983b5e0425A2 
+ Energy: 5 kWh
+ Price: 0.2 ETH
+Resetting the auction for the next round...
+Auction reset successfully!
+Next Auction Bidding Phase ends at: 2025-03-25 20:37:31
+Next Auction Reveal Phase ends at: 2025-03-25 20:37:36
+Completed 2 auction rounds.
+Waiting for the next auction round...

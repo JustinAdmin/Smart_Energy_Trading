@@ -68,16 +68,19 @@ class DemandResponseAgent(Agent):
                         predicted_supply = predicted_supply * 20667
 
                         timestamp = time.mktime(datetime.now().timetuple())
-                        energy_rate = get_energy_rate(timestamp)
+                        energy_rate = get_energy_rate(timestamp) * 10
                         
                         curtailment = 0
                         if predicted_demand > predicted_supply:
                             curtailment = (predicted_demand - predicted_supply) * 0.1  # 10% curtailment
                         
+                        market_value = get_energy_rate(datetime.now().timestamp())
+                        
                         response = Message(to="facilitating@localhost")
                         response.body = json.dumps({
                             "predicted_demand": float(predicted_demand),
                             "predicted_supply": float(predicted_supply),
+                            "market_value" : market_value,
                             "curtailment": curtailment,
                             "energy_rate": energy_rate,
                             "recommended_appliance_behaviour": [

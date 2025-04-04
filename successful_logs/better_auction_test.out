@@ -1,0 +1,110 @@
+PS C:\Users\Justin.V\Documents\5014-Project> & C:/Users/Justin.V/miniconda3/python.exe c:/Users/Justin.V/Documents/5014-Project/test_agents/test_auction.py
+🟡 Starting Ganache CLI...
+   Waiting for Ganache to initialize...
+✅ Ganache CLI should be running in a separate window.
+🟡 Deploying the smart contract...
+   Running deployment from project root: c:\Users\Justin.V\Documents\5014-Project
+   Expecting 'blockchain' directory at: c:\Users\Justin.V\Documents\5014-Project\blockchain
+   Waiting for deployment to complete (this may take 20-30 seconds)...
+✅ Smart contract deployment initiated. Check the separate window for status/errors AND PRESS ENTER WHEN DONE.
+   Deployment process finished. Proceeding with script.
+🟡 Initializing Web3 connection...
+✅ Web3 connected to Ganache.
+   Found 10 accounts.
+🟡 Loading contract...
+   Looking for .env at: c:\Users\Justin.V\Documents\5014-Project\blockchain\.env
+   Loaded .env file from blockchain directory.
+   Using Contract Address: 0x09A9b4D43A85EDa61F7271A61c4dDc34ceB7ACfD
+   Contract bytecode found at address.
+   Loading ABI from: c:\Users\Justin.V\Documents\5014-Project\blockchain\build\contracts\EnergyVickreyAuction.json
+   Contract ABI loaded.
+✅ Contract object initialized.
+
+=== Starting Auction Test (2 Rounds) ===
+
+>>> Round 1 / 2 <<<
+
+--- Running New Auction Round ---
+Seller/Deployer: 0x7fCFE7A5B50C3EA49C4c895431b3ce725e92D03D
+Bidders: ['0xEf1D0EBCa24C493995Ad07AfE9700ab4290307eF', '0x524029C6B6f46a25Fe8d52f5f3dDe924AfB9FaD7', '0x33e5B40F24f88a319E8Eb07367b6e0Eacd282049', '0x953FD00075925dA415e1F8F05bA1F98F9cd329E0']
+   Starting new auction...
+   Auction started successfully! Tx: ff05496a8e79ba61b140264102a8c97a3964d60553e9ae0be667b50dbea27dc6
+   (Using BIDDING_TIME=20, REVEAL_TIME=10 from .env)
+   Bidding phase: 2025-03-27 01:23:46 -> 2025-03-27 01:24:06
+   Target time 2025-03-27 01:23:46 already passed, proceeding immediately.
+   Placing bids...
+     Bid placed by 0xEf1D0EBC... Tx: 9d2fad8d73f383ae7b1bb40900be58626fed3d28355bd7ea523341aafbe3fa3b
+     Bid placed by 0x524029C6... Tx: ed875dc0fe23e467b04db96074ac2f3b9e16f40fc27b6076f0cbe48910f49f99
+     Bid placed by 0x33e5B40F... Tx: ae0968fb46407e0d5f85425d6a35d16a55fde11281560081b2f2b11a98963f04
+     Bid placed by 0x953FD000... Tx: 3ddaa4ab0800d7728d03d3495f3dcedbad61c40cd4280b2d94a4b3bce76b5075
+   Finished placing bids.
+   Reveal phase: 2025-03-27 01:24:06 -> 2025-03-27 01:24:16
+   Waiting for 14.0 seconds until 2025-03-27 01:24:06...
+   Wait finished.
+   Revealing bids...
+   Bidders retrieved from contract: 4
+     Bid revealed by 0xEf1D0EBC... Tx: 41f0b529f3f30e80c890b4d220325df8ad6d5d653b4c838f4fa277989723fb40
+     Bid revealed by 0x524029C6... Tx: c20e5bc3e94c5261f655230baf3f2ddc0057de244d5eb928a6509f8bd4db91c7
+     Bid revealed by 0x33e5B40F... Tx: 2fea77e36f8c2fcea974de821d5881d8deb4c6cd36ed85f8d79998f2a9738c93
+     Bid revealed by 0x953FD000... Tx: ca7a501ebbe1797f764b0bcc3bafb5fa34c1bd02e90508c7593b52b9fd0ad8d7
+   Finished revealing bids.
+   Close possible after: 2025-03-27 01:24:16
+   Waiting for 3.7 seconds until 2025-03-27 01:24:16...
+   Wait finished.
+   Closing auction...
+   Auction closed successfully! Tx: abfbd57233f605e283bb4b2d8d6ce66178a9dc1cfb2fd40148519d8bf19d5aff
+   --- Auction Results ---
+   Winner: 0x953FD00075925dA415e1F8F05bA1F98F9cd329E0
+   Energy: 5 kWh
+   Winning Price (2nd Bid): 0.2 ETH (200000000000000000 Wei)
+   -----------------------
+
+--- Waiting 2s before potentially starting next round ---
+
+>>> Round 2 / 2 <<<
+
+--- Running New Auction Round ---
+Seller/Deployer: 0x7fCFE7A5B50C3EA49C4c895431b3ce725e92D03D
+Bidders: ['0xEf1D0EBCa24C493995Ad07AfE9700ab4290307eF', '0x524029C6B6f46a25Fe8d52f5f3dDe924AfB9FaD7', '0x33e5B40F24f88a319E8Eb07367b6e0Eacd282049', '0x953FD00075925dA415e1F8F05bA1F98F9cd329E0']
+   Starting new auction...
+   Auction started successfully! Tx: b1967babe71929850b9ff45b9203712bbfa22d3e873c5357e41266aade3722b5
+   (Using BIDDING_TIME=20, REVEAL_TIME=10 from .env)
+   Bidding phase: 2025-03-27 01:24:20 -> 2025-03-27 01:24:40
+   Target time 2025-03-27 01:24:20 already passed, proceeding immediately.
+   Placing bids...
+     Bid placed by 0xEf1D0EBC... Tx: db7bb48eb4e9ef7f02062b11d61adb0146149daf916ec3ea3dacd3beb6fc2ca3
+     Bid placed by 0x524029C6... Tx: eb97379e752eb218614b49fc1dc2f6ade1db9f5edb2f060c4a900b07d60df831
+     Bid placed by 0x33e5B40F... Tx: 48a790c05e5030d336e458fc5549873163b19f6f90f3ea07717292eb29da5ffa
+     Bid placed by 0x953FD000... Tx: 280b29c41e6f39459174527f72340dfb189edcd11e0f0c4df256dd65622edbbb
+   Finished placing bids.
+   Reveal phase: 2025-03-27 01:24:40 -> 2025-03-27 01:24:50
+   Waiting for 14.1 seconds until 2025-03-27 01:24:40...
+   Wait finished.
+   Revealing bids...
+   Bidders retrieved from contract: 4
+     Bid revealed by 0xEf1D0EBC... Tx: 32a22032ae39aefe07086b3f1110b0b11ce0527b3a9fb92c0964d7b957300180
+     Bid revealed by 0x524029C6... Tx: 9f6b743595a87c6ac31c1ed9a821d31cc38c9047d686adce9a50c82438fc78f2
+     Bid revealed by 0x33e5B40F... Tx: 986455af1498b5e1a99bbf08335c45dc96090c32f90d3c4564cf4c9af8cf3f27
+     Bid revealed by 0x953FD000... Tx: 017f54435c5ff38e95e473db0fd8a8b3230a67ba0fb663fc10e6d02177eb0fdb
+   Finished revealing bids.
+   Close possible after: 2025-03-27 01:24:50
+   Waiting for 3.8 seconds until 2025-03-27 01:24:50...
+   Wait finished.
+   Closing auction...
+   Auction closed successfully! Tx: 5a65d61056d1c791379abecb193dd836d862a617b6245c92be5564fe774220f7
+   --- Auction Results ---
+   Winner: 0x953FD00075925dA415e1F8F05bA1F98F9cd329E0
+   Energy: 5 kWh
+   Winning Price (2nd Bid): 0.2 ETH (200000000000000000 Wei)
+   -----------------------
+
+--- Waiting 2s before potentially starting next round ---
+
+=== Auction Test Finished ===
+   Successfully completed 2 / 2 rounds.
+
+--- Cleaning up ---
+   Terminating Ganache CLI process...
+   Ganache terminated.
+--- Script finished ---
+PS C:\Users\Justin.V\Documents\5014-Project> 

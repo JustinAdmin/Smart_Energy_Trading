@@ -11,10 +11,10 @@ class FacilitatingAgent(Agent):
     class MultiAgentHandler(CyclicBehaviour):
         async def on_start(self):
             self.dependencies = {
-                "gui": ["house"], # , "negotiation", "behavioralsegmentation"
+                "gui": ["house"],
                 "prediction": ["house"],
                 "demandresponse": ["grid", "house"],
-                "negotiation": ["house", "prediction"],
+                "negotiation": ["house", "prediction", "demandresponse", "gui"],
                 "behavioralsegmentation": ["house", "demandresponse"],
                 "grid" : [],
                 "house" : []
@@ -64,6 +64,11 @@ class FacilitatingAgent(Agent):
                     print("[FacilitatingAgent] Grid status received.")
                     self.last_message["grid"]["time"] = datetime.now()
                     self.last_message["grid"]["msg"] = json.loads(msg.body)
+                
+                elif sender == "gui@localhost" and time_from_now(self.last_message["gui"]) > 5:
+                    print("[FacilitatingAgent] Grid status received.")
+                    self.last_message["gui"]["time"] = datetime.now()
+                    self.last_message["gui"]["msg"] = json.loads(msg.body)
 
                 else:
                     print(f"[FacilitatingAgent] !!Timeout: {sender}!!")
