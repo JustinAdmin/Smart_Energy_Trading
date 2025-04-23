@@ -25,59 +25,58 @@ The system employs a multi-agent architecture coordinated by a Facilitating Agen
 
 ```mermaid
 graph TD
-    %% Define Nodes
+    %% --- Nodes (same as above) ---
     subgraph "Data Sources"
         House("House Data (Sensors, Weather)")
         Grid("Grid Data (Price, State)")
     end
-
     subgraph "Machine Learning Agents"
         PredAgent["Prediction Agent (LSTM)<br/><i>Forecasts House Energy</i>"]
         DRAgent["Demand Response Agent (CNN-LSTM)<br/><i>Predicts Grid Conditions</i>"]
         BehavAgent["Behavioral Agent (LightGBM)<br/><i>Ranks Appliance Priority</i>"]
     end
-
     subgraph "Coordination & Action"
         Facilitator{"Facilitating Agent<br/><i>Coordinates Data/Messages</i>"}
         NegoAgent{"Negotiation Agent<br/><i>Manages P2P Trading</i>"}
         Blockchain[("Blockchain<br/><i>Vickrey Auction</i>")]
     end
-
     subgraph "User Interface"
         GUIAgent["GUI Agent"]
         DB[(SQLite DB)]
         GUI[("Streamlit GUI<br/><i>User View/Control</i>")]
     end
 
-    %% Define Flow
-    House --> PredAgent;
-    House --> BehavAgent;
-    Grid --> DRAgent;
-
-    PredAgent -- Energy Forecasts --> Facilitator;
-    DRAgent -- Grid Predictions --> Facilitator;
-    BehavAgent -- Appliance Priorities --> Facilitator;
-
-    Facilitator -- Coordinated Data --> NegoAgent;
-    Facilitator -- Data/Status --> GUIAgent;
-    Facilitator -- Control Signals --> House;
+    %% --- Flow (same as above) ---
+    House --> PredAgent; House --> BehavAgent; Grid --> DRAgent;
+    PredAgent -- Energy Forecasts --> Facilitator; DRAgent -- Grid Predictions --> Facilitator; BehavAgent -- Appliance Priorities --> Facilitator;
+    Facilitator -- Coordinated Data --> NegoAgent; Facilitator -- Data/Status --> GUIAgent; Facilitator -- Control Signals --> House;
     %% e.g., Curtailment command based on Behavior Agent priority
-
     NegoAgent -- Decides Trade --> NegoAgent;
-    %% Internal decision loop (Comment moved)
-    NegoAgent -- Executes Trade --> Blockchain;
-    Blockchain -- Trade Results --> NegoAgent;
+    %% Internal decision loop
+    NegoAgent -- Executes Trade --> Blockchain; Blockchain -- Trade Results --> NegoAgent;
+    GUIAgent -- Stores Data --> DB; DB -- Displays Data --> GUI; GUI -- User Input --> DB; DB -- Reads Input --> GUIAgent; GUIAgent -- Relays Commands --> Facilitator;
 
-    GUIAgent -- Stores Data --> DB;
-    DB -- Displays Data --> GUI;
-    GUI -- User Input --> DB;
-    DB -- Reads Input --> GUIAgent;
-    GUIAgent -- Relays Commands --> Facilitator;
+    %% Style Nodes for Dark Mode (Hex Codes)
+    %% Data Sources - Tealish Blue
+    style House fill:#2a9d8f,stroke:#ccc,color:white
+    style Grid fill:#2a9d8f,stroke:#ccc,color:white
 
-    %% Optional: Style ML nodes slightly differently
-    style PredAgent fill:#f9d,stroke:#333,stroke-width:2px
-    style DRAgent fill:#f9d,stroke:#333,stroke-width:2px
-    style BehavAgent fill:#f9d,stroke:#333,stroke-width:2px
+    %% ML Agents - Muted Purple
+    style PredAgent fill:#8e7dbe,stroke:#ccc,color:white
+    style DRAgent fill:#8e7dbe,stroke:#ccc,color:white
+    style BehavAgent fill:#8e7dbe,stroke:#ccc,color:white
+
+    %% Coordination - Sandy Orange
+    style Facilitator fill:#e9c46a,stroke:#333,color:black 
+    style NegoAgent fill:#e9c46a,stroke:#333,color:black
+
+    %% Infrastructure - Darker Gray
+    style Blockchain fill:#6c757d,stroke:#ccc,color:white
+    style DB fill:#6c757d,stroke:#ccc,color:white
+
+    %% UI - Coral/Pinkish
+    style GUIAgent fill:#f77f00,stroke:#eee,color:black 
+    style GUI fill:#f77f00,stroke:#eee,color:black
 ```
 ![System Deployment Diagram](Images/prediction_integration.png)
 *High-level deployment view of prediction Agent, negotiation Agent and facilitating Agent.*
